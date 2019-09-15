@@ -1,12 +1,12 @@
 # Certificate Operator
 
-This project creates a custom Kubertenes controller to process IstioCertificate resources.
+This project creates a custom Kubertenes controller to process IstioCertificate resourcee - Making certificate management in Kubernetes with Istio easy.
 
 ## Introduction
 
 Using self-managed certificates in Kubernetes with a Istio service mesh can create complexity - This project aims to make self-managed and/or auto provisioned certificate management simple when using Istio.
 
-When integrating self-managed certificates with Istio Gateway objects there are several key things to consider such as the `Mode` whether it's `SIMPLE` or `PASSTHROUGH`, depending on where you want your TLS termination to occur. There are other variables to consider such as where Istio requires the certificate to exist, one such example is if using `SIMPLE` it will enable TLS termination to occur at the gateway, and the secret needs to exist in the namespace where the Istio Gateway object exists - however, this may be a namespace you decide you don't want to give access to engineers and might be locked down. Whereas `PASSTHROUGH` would require the certificate secret to exist in the namespace where the pod that has the application is running.
+When integrating self-managed certificates with Istio Gateway objects there are several key things to consider such as the `Mode` whether it's `SIMPLE` or `PASSTHROUGH`, depending on where you want your TLS termination to occur. There are other variables to consider such as where Istio requires the certificate to exist, one such example is if using `SIMPLE` it will enable TLS termination to occur at the gateway, and the secret needs to exist in the namespace where the Istio Gateway object exists (usually `istio-system`) - however, this may be a namespace you decide you don't want to give access to engineers and might be locked down. Whereas `PASSTHROUGH` would require the certificate secret to exist in the namespace where the pod that has the application is running.
 
 The goal of this Operator is to allow teams to bring self-managed certificates within the cluster, remove the complexity of managing secrets in their respective namespaces, and automate updating the Istio Gateway objects with the required values.
 
@@ -21,6 +21,30 @@ The following diagrams will demonstrate both `SIMPLE` and `PASSTHROUGH` architec
 ### PASSTHROUGH Mode
 
 <img src="./docs/images/architecture-passthrough.png"/>
+
+## Example CRD
+
+The following is an example of how to structure the required CRD.
+
+```yaml
+apiVersion: app.example.com/v1alpha1
+kind: IstioCertificate
+metadata:
+  name: example-istio-certificate
+  namespace: default
+spec:
+  name: example-istio-certificate
+  hosts:
+    - "*"
+  port: 443
+  mode: SIMPLE
+  trafficType: ingress # trafficType can be either Ingress or Egress 
+  secretType: secret
+  cert: <base64 encoded cert>
+  certPath: "" # Only required if secretType is set to fileMount - Will be omitted if empty
+  key: <base64 encoded key>
+  keyPath: "" # Only required if secretType is set to fileMount - Will be omitted if empty
+```
 
 ## Local Setup
 
