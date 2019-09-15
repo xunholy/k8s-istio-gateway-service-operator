@@ -1,0 +1,96 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: istiocertificates.app.example.com
+spec:
+  group: app.example.com
+  names:
+    kind: IstioCertificate
+    listKind: IstioCertificateList
+    plural: istiocertificates
+    singular: istiocertificate
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            cert:
+              description: Secret map with each key which is base64 encoded
+              format: byte
+              type: string
+            certPath:
+              type: string
+            hosts:
+              description: List of Servers > map of list of hosts and port
+              items:
+                type: string
+              minItems: 1
+              type: array
+            key:
+              description: Secret map with each key which is base64 encoded
+              format: byte
+              type: string
+            keyPath:
+              type: string
+            mode:
+              description: 'Options: "simple" or "passthrough"'
+              enum:
+              - SIMPLE
+              - PASSTHROUGH
+              type: string
+            name:
+              description: Unique name of resource
+              maxLength: 15
+              minLength: 1
+              type: string
+            port:
+              format: int64
+              maximum: 65535
+              minimum: 1
+              type: integer
+            secretType:
+              description: 'Options: "fileMount" or "secret" fileMount is Required
+                if using CertPath and KeyPath. Determines if the TLS stanza on the
+                gateway object should reference a fileMount of Kubernetes secret'
+              enum:
+              - fileMount
+              - secret
+              type: string
+            trafficType:
+              description: 'Options: "ingress" or "egress"'
+              enum:
+              - ingress
+              - egress
+              type: string
+          required:
+          - name
+          - hosts
+          - port
+          - mode
+          - trafficType
+          - key
+          - cert
+          - secretType
+          type: object
+        status:
+          type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
