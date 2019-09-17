@@ -59,7 +59,7 @@ spec:
               minLength: 1
               type: string
             port:
-              format: int64
+              format: int32
               maximum: 65535
               minimum: 1
               type: integer

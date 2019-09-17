@@ -2,14 +2,13 @@ package secret
 
 import (
 	"context"
+
 	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type Secret struct {
@@ -19,7 +18,7 @@ type Secret struct {
 	Owner     *appv1alpha1.IstioCertificate
 }
 
-func Reconcile(s Secret, r interface{}) error {
+func Reconcile(s Secret) error {
 	secret := &corev1.Secret{}
 	key := types.NamespacedName{Name: s.Name, Namespace: s.Namespace}
 	err := r.client.Get(context.TODO(), key, secret)

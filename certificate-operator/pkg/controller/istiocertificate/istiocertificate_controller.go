@@ -11,20 +11,20 @@ import (
 	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-		"k8s.io/apimachinery/pkg/runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-var ( 
+var (
 	// blank assignment to verify that ReconcileIstioCertificate implements reconcile.Reconciler
-	_ reconcile.Reconciler = &ReconcileIstioCertificate{}
-	log = logf.Log.WithName("controller_istiocertificate")
+	_   reconcile.Reconciler = &ReconcileIstioCertificate{}
+	log                      = logf.Log.WithName("controller_istiocertificate")
 )
 
 type ReconcileIstioCertificate struct {
@@ -33,7 +33,6 @@ type ReconcileIstioCertificate struct {
 	client client.Client
 	scheme *runtime.Scheme
 }
-
 
 // Add creates a new IstioCertificate Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -98,8 +97,8 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 					Namespace:   request.Namespace,
 					Port:        certificate.Spec.Port,
 					TrafficType: trafficType,
-				}			
-				err := gw.Reconcile(gateway, r)
+				}
+				err := gw.Reconcile(gateway)
 				if err != nil {
 					return reconcile.Result{}, err
 				}
@@ -117,7 +116,7 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 		Labels:    map[string]string{"Namespace": request.Namespace},
 		Owner:     certificate,
 	}
-	err = sec.Reconcile(secret, r)
+	err = sec.Reconcile(secret)
 	if err != nil {
 		logger.Error(err, "Failed to process secret request. Requeue")
 		return reconcile.Result{}, err
@@ -131,7 +130,7 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 		TrafficType: certificate.Spec.TrafficType,
 	}
 
-	err = gw.Reconcile(gateway, r)
+	err = gw.Reconcile(gateway)
 	if err != nil {
 		logger.Error(err, "Failed to process gateway request. Requeue")
 		return reconcile.Result{}, err

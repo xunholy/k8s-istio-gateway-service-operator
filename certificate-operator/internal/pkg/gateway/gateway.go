@@ -11,17 +11,16 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"k8s.io/apimachinery/pkg/runtime"
 )
 
 type Gateway struct {
 	Name        string
 	Namespace   string
-	Port        int
+	Port        uint32
 	TrafficType string
 }
 
-func Reconcile(g Gateway, r interface{}) error {
+func Reconcile(g Gateway) error {
 	gateway := &istio.Gateway{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: g.Name, Namespace: g.Namespace}, gateway)
 	if err != nil {
@@ -44,36 +43,38 @@ func Reconcile(g Gateway, r interface{}) error {
 	}
 
 	// Create empty server stanza array
-	servers := []istio.Server{}
+	servers := []*istio.Server{}
 
 	// Add all certificate server entries into servers array
 	for _, certificate := range certificates.Items {
-		secretRef := &istio.Server.Tls{}
+		secretRef := &istio.Server{}
 		if certificate.Spec.SecretType == "fileMount" {
 			// TODO: This would require the Istio GW pod to be restarted to pickup secrets
-			secretRef = &istio.Server.Tls{
-				ServerCertificate: certificate.Spec.CertPath,
-				PrivateKey:        certificate.Spec.KeyPath,
-				Mode:              certificate.Spec.Mode,
+			secretRef = &istio.Server{
+				Tls: &istio.Server_TLSOptions{
+					ServerCertificate: certificate.Spec.CertPath,
+					PrivateKey:        certificate.Spec.KeyPath,
+					Mode:              tlsMode(certificate.Spec.Mode),
+				},
 			}
 		} else {
-			secretRef = &istio.Tls{
-				CredentialName: fmt.Sprintf("%s-%S-secret", certificate.Namespace, certificate.Spec.Name),
-				Mode:           certificate.Spec.Mode,
+			secretRef = &istio.Server{
+				Tls: &istio.Server_TLSOptions{
+					CredentialName: fmt.Sprintf("%s-%S-secret", certificate.Namespace, certificate.Spec.Name),
+					Mode:           tlsMode(certificate.Spec.Mode),
+				},
 			}
 		}
-		servers = append(servers, istio.Server{
-			Port: istio.Port{
-				Name:   fmt.Sprintf("https-", certificate.Spec.Name),
-				Number: certificate.Spec.Port,
-				// default HTTP(S) Protocol
-				// TODO: Allow other Protocol variations to be selected
+		servers = append(servers, &istio.Server{
+			Port: &istio.Port{
+				Name:     fmt.Sprintf("https-", certificate.Spec.Name),
+				Number:   certificate.Spec.Port,
 				Protocol: "HTTPS",
 			},
-			Tls:   secretRef,
+			Tls:   secretRef.Tls,
 			Hosts: certificate.Spec.Hosts,
 		})
 	}
-	gateway.Spec.Servers = servers
+	gateway.Servers = servers
 	return r.client.Update(context.TODO(), gateway)
 }
