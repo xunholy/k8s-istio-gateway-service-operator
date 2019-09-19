@@ -12,8 +12,6 @@ import (
 
 type Gateway struct {
 	Name         string
-	Namespace    string
-	Port         int
 	TrafficType  string
 	Certificates *appv1alpha1.IstioCertificateList
 	Gateway      *istio.Gateway

@@ -155,8 +155,6 @@ func (r *ReconcileIstioCertificate) ReconcileGateway(request reconcile.Request, 
 
 	g := gw.Gateway{
 		Name:         fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType),
-		Namespace:    request.Namespace,
-		Port:         certificate.Spec.Port,
 		TrafficType:  trafficType,
 		Certificates: certificates,
 		Gateway:      gatewayObj,
