@@ -87,30 +87,13 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	logger.Info("Reconciling IstioCertificate")
-
-	// Fetch the IstioCertificate instance
-	certificate := &appv1alpha1.IstioCertificate{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, certificate)
+	certificate, err := r.ReconcileCRD(request)
 	if err != nil {
-		if errors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
-			// Return and don't requeue
-			logger.Info("Reconcile Gateway objects due to CRD removal.")
-			for _, trafficType := range []string{"ingress", "egress"} {
-				err := r.ReconcileGateway(request, certificate, trafficType)
-				if err != nil {
-					logger.Error(err, "Failed to process CRD removed, reconcile gateway request. Requeue")
-					return reconcile.Result{}, err
-				}
-				logger.Info("Reconcile Gateway object successfully", "trafficType", trafficType)
-			}
-			// Once the CRD has been removed there is no reason to requeue any additional times.
-			return reconcile.Result{}, nil
-		}
-		// Error reading the object - requeue the request.
 		logger.Error(err, "Failed to process CRD request. Requeue")
 		return reconcile.Result{}, err
+	}
+	if certificate == nil {
+		return reconcile.Result{}, nil
 	}
 
 	logger.Info("Reconcile Secret object.", "certificate.Spec.Mode", certificate.Spec.Mode)
@@ -127,6 +110,30 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 		return reconcile.Result{}, err
 	}
 	return reconcile.Result{Requeue: true}, nil
+}
+
+func (r *ReconcileIstioCertificate) ReconcileCRD(request reconcile.Request) (*appv1alpha1.IstioCertificate, error) {
+	// Fetch the IstioCertificate instance
+	certificate := &appv1alpha1.IstioCertificate{}
+	err := r.client.Get(context.TODO(), request.NamespacedName, certificate)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
+			// Return and don't requeue
+			for _, trafficType := range []string{"ingress", "egress"} {
+				err := r.ReconcileGateway(request, certificate, trafficType)
+				if err != nil {
+					return certificate, err
+				}
+			}
+			// Once the CRD has been removed there is no reason to requeue any additional times.
+			return nil, nil
+		}
+		// Error reading the object - requeue the request.
+		return certificate, err
+	}
+	return certificate, nil
 }
 
 func (r *ReconcileIstioCertificate) ReconcileGateway(request reconcile.Request, certificate *appv1alpha1.IstioCertificate, trafficType string) error {
