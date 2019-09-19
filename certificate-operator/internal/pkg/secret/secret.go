@@ -1,14 +1,9 @@
 package secret
 
 import (
-	"context"
-
 	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 type Secret struct {
@@ -18,36 +13,26 @@ type Secret struct {
 	Owner     *appv1alpha1.IstioCertificate
 }
 
-func Reconcile(s Secret) error {
-	secret := &corev1.Secret{}
-	key := types.NamespacedName{Name: s.Name, Namespace: s.Namespace}
-	err := r.client.Get(context.TODO(), key, secret)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			secretObj := &corev1.Secret{
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "Secret",
-					APIVersion: "v1",
-				},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      s.Name,
-					Namespace: s.Namespace,
-					Labels:    s.Labels,
-				},
-				Data: map[string][]byte{
-					"tls.key": s.Owner.Spec.Key,
-					"tls.crt": s.Owner.Spec.Cert,
-				},
-				Type: "kubernetes.io/tls",
-			}
-			// Set IstioCertificate instance as the owner of the Service.
-			err := controllerutil.SetControllerReference(s.Owner, secretObj, r.scheme)
-			if err != nil {
-				return err
-			}
-			return r.client.Create(context.TODO(), secretObj)
-		}
-		return err
+func Reconcile(s Secret) *corev1.Secret {
+	return &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      s.Name,
+			Namespace: s.Namespace,
+			Labels:    s.Labels,
+		},
+		// Data contains the secret data. Each key must consist of alphanumeric
+		// characters, '-', '_' or '.'. The serialized form of the secret data is a
+		// base64 encoded string, representing the arbitrary (possibly non-string)
+		// data value here. Described in https://tools.ietf.org/html/rfc4648#section-4
+		Data: map[string][]byte{
+			"tls.key": s.Owner.Spec.Key,
+			"tls.crt": s.Owner.Spec.Cert,
+		},
+		// Used to facilitate programmatic handling of secret data.
+		Type: "kubernetes.io/tls",
 	}
-	return nil
 }

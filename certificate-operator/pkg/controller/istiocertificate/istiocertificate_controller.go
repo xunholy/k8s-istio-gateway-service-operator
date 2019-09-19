@@ -8,16 +8,24 @@ import (
 	gw "github.com/xUnholy/k8s-operator/internal/pkg/gateway"
 	sec "github.com/xUnholy/k8s-operator/internal/pkg/secret"
 
+	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
+	// istio "istio.io/api/networking/v1alpha3"
+
 	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	istio "knative.dev/pkg/apis/istio/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -92,50 +100,101 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			for _, trafficType := range []string{"ingress", "egress"} {
-				gateway := gw.Gateway{
-					Name:        fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType),
-					Namespace:   request.Namespace,
-					Port:        certificate.Spec.Port,
-					TrafficType: trafficType,
-				}
-				err := gw.Reconcile(gateway)
+				err := r.ReconcileGateway(request, certificate, trafficType)
 				if err != nil {
+					logger.Error(err, "Failed to process CRD removed, reconcile gateway request. Requeue")
 					return reconcile.Result{}, err
 				}
 			}
+			// Once the CRD has been removed there is no reason to requeue any additional times.
 			return reconcile.Result{}, nil
 		}
 		// Error reading the object - requeue the request.
+		logger.Error(err, "Failed to process CRD request. Requeue")
 		return reconcile.Result{}, err
 	}
 
 	logger.Info("Reconcile Secret object.")
-	secret := sec.Secret{
-		Name:      fmt.Sprintf("%s-%s-secret", request.Namespace, request.Name),
-		Namespace: secretNamespace(certificate),
-		Labels:    map[string]string{"Namespace": request.Namespace},
-		Owner:     certificate,
-	}
-	err = sec.Reconcile(secret)
+	err = r.ReconcileSecret(request, certificate)
 	if err != nil {
 		logger.Error(err, "Failed to process secret request. Requeue")
 		return reconcile.Result{}, err
 	}
 
 	logger.Info("Reconcile Gateway object.")
-	gateway := gw.Gateway{
-		Name:        fmt.Sprintf("%s-%s-gateway", request.Namespace, certificate.Spec.TrafficType),
-		Namespace:   request.Namespace,
-		Port:        certificate.Spec.Port,
-		TrafficType: certificate.Spec.TrafficType,
-	}
-
-	err = gw.Reconcile(gateway)
+	err = r.ReconcileGateway(request, certificate, certificate.Spec.TrafficType)
 	if err != nil {
 		logger.Error(err, "Failed to process gateway request. Requeue")
 		return reconcile.Result{}, err
 	}
 	return reconcile.Result{Requeue: true}, nil
+}
+
+func (r *ReconcileIstioCertificate) ReconcileGateway(request reconcile.Request, certificate *appv1alpha1.IstioCertificate, trafficType string) error {
+	gatewayObj := &istio.Gateway{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: request.Name, Namespace: request.Namespace}, gatewayObj)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			// Ingress and/or Egress Gateway object does not exist (Possibly Expected?)
+			// TODO: Should we requeue here?
+			return nil
+		}
+		return err
+	}
+
+	// List all IstioCertificate CRDs
+	certificates := &appv1alpha1.IstioCertificateList{}
+	listOps := &client.ListOptions{
+		Namespace:     request.Namespace,
+		FieldSelector: fields.OneTermEqualSelector("spec.trafficType", trafficType),
+	}
+	err = r.client.List(context.TODO(), listOps, certificates)
+	if err != nil {
+		return err
+	}
+
+	g := gw.Gateway{
+		Name:         fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType),
+		Namespace:    request.Namespace,
+		Port:         certificate.Spec.Port,
+		TrafficType:  trafficType,
+		Certificates: certificates,
+		Gateway:      gatewayObj,
+	}
+	reconciledGatewayObj := gw.Reconcile(g)
+	err = r.client.Update(context.TODO(), reconciledGatewayObj)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, certificate *appv1alpha1.IstioCertificate) error {
+	secret := &corev1.Secret{}
+	key := types.NamespacedName{Name: request.Name, Namespace: request.Namespace}
+	err := r.client.Get(context.TODO(), key, secret)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			s := sec.Secret{
+				Name:      fmt.Sprintf("%s-%s-secret", request.Namespace, request.Name),
+				Namespace: secretNamespace(certificate),
+				Labels:    map[string]string{"Namespace": request.Namespace},
+				Owner:     certificate,
+			}
+			reconciledSecretObj := sec.Reconcile(s)
+			err := r.client.Create(context.TODO(), reconciledSecretObj)
+			if err != nil {
+				return err
+			}
+			err = controllerutil.SetControllerReference(certificate, reconciledSecretObj, r.scheme)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 // TODO: If a secret is SIMPLE and eventually becomes PASSTHROUGH the orignial secret is not cleaned up in istio-system.

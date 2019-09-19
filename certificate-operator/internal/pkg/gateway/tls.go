@@ -1,10 +1,14 @@
 package gateway
 
-import istio "istio.io/api/networking/v1alpha3"
+import (
+	istio "istio.io/api/networking/v1alpha3"
+	knative "knative.dev/pkg/apis/istio/v1alpha3"
+)
 
-func tlsMode(mode string) istio.Server_TLSOptions_TLSmode {
+// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
+// nolint
+func istioTLSMode(mode string) istio.Server_TLSOptions_TLSmode {
 	switch mode {
-
 	case "PASSTHROUGH":
 		// The SNI string presented by the client will be used as the match
 		// criterion in a VirtualService TLS route to determine the
@@ -45,5 +49,30 @@ func tlsMode(mode string) istio.Server_TLSOptions_TLSmode {
 	default:
 		// Incorrect Mode was specified
 		return -1
+	}
+}
+
+func knativeTLSMode(mode string) knative.TLSMode {
+	switch mode {
+	case "SIMPLE":
+		// If set to "SIMPLE", the proxy will secure connections with
+		// standard TLS semantics.
+		return knative.TLSModeSimple
+
+	case "PASSTHROUGH":
+		// If set to "PASSTHROUGH", the proxy will forward the connection
+		// to the upstream server selected based on the SNI string presented
+		// by the client.
+		return knative.TLSModeSimple
+
+	case "MUTUAL":
+		// If set to "MUTUAL", the proxy will secure connections to the
+		// upstream using mutual TLS by presenting client certificates for
+		// authentication.
+		return knative.TLSModeSimple
+
+	default:
+		// Return SIMPLE as a default
+		return knative.TLSModeSimple
 	}
 }

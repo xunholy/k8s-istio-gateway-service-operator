@@ -19,7 +19,7 @@ type IstioCertificateSpec struct {
 
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
-	Port uint32 `json:"port"`
+	Port int `json:"port"`
 
 	// Options: "simple" or "passthrough"
 	// +kubebuilder:validation:Enum=SIMPLE,PASSTHROUGH,MUTUAL
