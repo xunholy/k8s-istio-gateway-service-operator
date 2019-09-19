@@ -176,17 +176,18 @@ func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, c
 				Owner:     certificate,
 			}
 			reconciledSecretObj := secret.Reconcile(s)
-			err := r.client.Create(context.TODO(), reconciledSecretObj)
-			if err != nil {
-				return err
-			}
 
 			// SetControllerReference sets owner as a Controller OwnerReference on owned.
 			// This is used for garbage collection of the owned object and for
 			// reconciling the owner object on changes to owned (with a Watch + EnqueueRequestForOwner).
 			// Since only one OwnerReference can be a controller, it returns an error if
 			// there is another OwnerReference with Controller flag set.
-			return controllerutil.SetControllerReference(certificate, reconciledSecretObj, r.scheme)
+			err = controllerutil.SetControllerReference(certificate, reconciledSecretObj, r.scheme)
+			if err != nil {
+				return err
+			}
+
+			return r.client.Create(context.TODO(), reconciledSecretObj)
 		}
 		return err
 	}

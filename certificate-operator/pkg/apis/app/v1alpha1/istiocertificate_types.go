@@ -8,7 +8,6 @@ import (
 // +k8s:openapi-gen=true
 type IstioCertificateSpec struct {
 	// Unique name of resource
-	// +kubebuilder:validation:MaxLength=15
 	// +kubebuilder:validation:MinLength=1
 	Name string `json:"name"`
 
