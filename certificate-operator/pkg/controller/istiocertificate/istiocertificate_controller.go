@@ -5,19 +5,27 @@ import (
 	"fmt"
 	"strings"
 
-	gw "github.com/xUnholy/k8s-operator/internal/pkg/gateway"
-	sec "github.com/xUnholy/k8s-operator/internal/pkg/secret"
+	gateway "github.com/xUnholy/k8s-operator/internal/pkg/gateway"
+	secret "github.com/xUnholy/k8s-operator/internal/pkg/secret"
+
+	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
+	// istio "istio.io/api/networking/v1alpha3"
 
 	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	istio "knative.dev/pkg/apis/istio/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
@@ -59,9 +67,9 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		return err
 	}
 
-	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner IstioCertificate
-	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
+	// Modify this to be the types you create that are owned by the primary resource
+	// Watch for changes to secondary resource Secrets and requeue the owner IstioCertificate
+	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &appv1alpha1.IstioCertificate{},
 	})
@@ -74,15 +82,37 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 // Reconcile reads that state of the cluster for a IstioCertificate object and makes changes based on the state read
 // and what is in the IstioCertificate.Spec
-// TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
-// a Pod as an example
-// Note:
-// The Controller will requeue the Request to be processed again if the returned error is non-nil or
+// Note: The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	logger.Info("Reconciling IstioCertificate")
+	certificate, err := r.ReconcileCRD(request)
+	if err != nil {
+		logger.Error(err, "Failed to process CRD request. Requeue")
+		return reconcile.Result{}, err
+	}
+	if certificate == nil {
+		return reconcile.Result{}, nil
+	}
 
+	logger.Info("Reconcile Secret object.", "certificate.Spec.Mode", certificate.Spec.Mode)
+	err = r.ReconcileSecret(request, certificate)
+	if err != nil {
+		logger.Error(err, "Failed to process secret request. Requeue")
+		return reconcile.Result{}, err
+	}
+
+	logger.Info("Reconcile Gateway object.", "certificate.Spec.TrafficType", certificate.Spec.TrafficType)
+	err = r.ReconcileGateway(request, certificate, certificate.Spec.TrafficType)
+	if err != nil {
+		logger.Error(err, "Failed to process gateway request. Requeue")
+		return reconcile.Result{}, err
+	}
+	return reconcile.Result{Requeue: true}, nil
+}
+
+func (r *ReconcileIstioCertificate) ReconcileCRD(request reconcile.Request) (*appv1alpha1.IstioCertificate, error) {
 	// Fetch the IstioCertificate instance
 	certificate := &appv1alpha1.IstioCertificate{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, certificate)
@@ -92,50 +122,84 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			for _, trafficType := range []string{"ingress", "egress"} {
-				gateway := gw.Gateway{
-					Name:        fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType),
-					Namespace:   request.Namespace,
-					Port:        certificate.Spec.Port,
-					TrafficType: trafficType,
-				}
-				err := gw.Reconcile(gateway)
+				err := r.ReconcileGateway(request, certificate, trafficType)
 				if err != nil {
-					return reconcile.Result{}, err
+					return certificate, err
 				}
 			}
-			return reconcile.Result{}, nil
+			// Once the CRD has been removed there is no reason to requeue any additional times.
+			return nil, nil
 		}
 		// Error reading the object - requeue the request.
-		return reconcile.Result{}, err
+		return certificate, err
 	}
+	return certificate, nil
+}
 
-	logger.Info("Reconcile Secret object.")
-	secret := sec.Secret{
-		Name:      fmt.Sprintf("%s-%s-secret", request.Namespace, request.Name),
-		Namespace: secretNamespace(certificate),
-		Labels:    map[string]string{"Namespace": request.Namespace},
-		Owner:     certificate,
-	}
-	err = sec.Reconcile(secret)
+func (r *ReconcileIstioCertificate) ReconcileGateway(request reconcile.Request, certificate *appv1alpha1.IstioCertificate, trafficType string) error {
+	gatewayObj := &istio.Gateway{}
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType), Namespace: request.Namespace}, gatewayObj)
 	if err != nil {
-		logger.Error(err, "Failed to process secret request. Requeue")
-		return reconcile.Result{}, err
+		if errors.IsNotFound(err) {
+			// Ingress and/or Egress Gateway object does not exist (Possibly Expected?)
+			// TODO: Should we requeue here?
+			return nil
+		}
+		return err
 	}
 
-	logger.Info("Reconcile Gateway object.")
-	gateway := gw.Gateway{
-		Name:        fmt.Sprintf("%s-%s-gateway", request.Namespace, certificate.Spec.TrafficType),
-		Namespace:   request.Namespace,
-		Port:        certificate.Spec.Port,
-		TrafficType: certificate.Spec.TrafficType,
+	// List all IstioCertificate CRDs
+	// TODO: Consider using the client.MatchingLabels() and client.MatchingField() to handle options
+	certificates := &appv1alpha1.IstioCertificateList{}
+	listOps := &client.ListOptions{
+		Namespace:     request.Namespace,
+		FieldSelector: fields.OneTermEqualSelector("spec.trafficType", trafficType),
 	}
 
-	err = gw.Reconcile(gateway)
+	err = r.client.List(context.TODO(), listOps, certificates)
 	if err != nil {
-		logger.Error(err, "Failed to process gateway request. Requeue")
-		return reconcile.Result{}, err
+		return err
 	}
-	return reconcile.Result{Requeue: true}, nil
+
+	g := gateway.GatewayConfig{
+		Name:         fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType),
+		TrafficType:  trafficType,
+		Certificates: certificates,
+		Gateway:      gatewayObj,
+	}
+	reconciledGatewayObj := gateway.Reconcile(g)
+	return r.client.Update(context.TODO(), reconciledGatewayObj)
+}
+
+func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, certificate *appv1alpha1.IstioCertificate) error {
+	secretObj := &corev1.Secret{}
+	key := types.NamespacedName{Name: fmt.Sprintf("%s-%s-secret", request.Namespace, request.Name), Namespace: request.Namespace}
+	err := r.client.Get(context.TODO(), key, secretObj)
+	if err != nil {
+		if errors.IsNotFound(err) {
+			s := secret.SecretConfig{
+				Name:      fmt.Sprintf("%s-%s-secret", request.Namespace, request.Name),
+				Namespace: secretNamespace(certificate),
+				Labels:    map[string]string{"Namespace": request.Namespace},
+				Owner:     certificate,
+			}
+			reconciledSecretObj := secret.Reconcile(s)
+
+			// SetControllerReference sets owner as a Controller OwnerReference on owned.
+			// This is used for garbage collection of the owned object and for
+			// reconciling the owner object on changes to owned (with a Watch + EnqueueRequestForOwner).
+			// Since only one OwnerReference can be a controller, it returns an error if
+			// there is another OwnerReference with Controller flag set.
+			err = controllerutil.SetControllerReference(certificate, reconciledSecretObj, r.scheme)
+			if err != nil {
+				return err
+			}
+
+			return r.client.Create(context.TODO(), reconciledSecretObj)
+		}
+		return err
+	}
+	return nil
 }
 
 // TODO: If a secret is SIMPLE and eventually becomes PASSTHROUGH the orignial secret is not cleaned up in istio-system.

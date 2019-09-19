@@ -11,6 +11,9 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 
+	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
+	k8sruntime "k8s.io/apimachinery/pkg/runtime"
+
 	"github.com/xUnholy/k8s-operator/pkg/apis"
 	"github.com/xUnholy/k8s-operator/pkg/controller"
 
@@ -115,6 +118,19 @@ func main() {
 
 	if err = serveCRMetrics(cfg); err != nil {
 		log.Info("Could not generate and serve custom resource metrics", "error", err.Error())
+	}
+
+	// Setup cache for FieldSelector
+	// The indexer function must be defined to allow FieldSelectors with local cache work as expected.
+	cache := mgr.GetCache()
+
+	indexFunc := func(obj k8sruntime.Object) []string {
+		return []string{obj.(*appv1alpha1.IstioCertificate).Spec.TrafficType}
+	}
+
+	err = cache.IndexField(&appv1alpha1.IstioCertificate{}, "spec.trafficType", indexFunc)
+	if err != nil {
+		log.Info("Could not setup index on local cache", "error", err.Error())
 	}
 
 	// Add to the below struct any other metrics ports you want to expose.
