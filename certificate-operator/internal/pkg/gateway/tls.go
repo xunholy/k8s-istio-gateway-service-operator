@@ -63,13 +63,13 @@ func knativeTLSMode(mode string) knative.TLSMode {
 		// If set to "PASSTHROUGH", the proxy will forward the connection
 		// to the upstream server selected based on the SNI string presented
 		// by the client.
-		return knative.TLSModeSimple
+		return knative.TLSModePassThrough
 
 	case "MUTUAL":
 		// If set to "MUTUAL", the proxy will secure connections to the
 		// upstream using mutual TLS by presenting client certificates for
 		// authentication.
-		return knative.TLSModeSimple
+		return knative.TLSModeMutual
 
 	default:
 		// Return SIMPLE as a default
