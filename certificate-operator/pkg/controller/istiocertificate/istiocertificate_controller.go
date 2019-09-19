@@ -99,12 +99,14 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
+			logger.Info("Reconcile Gateway objects due to CRD removal.")
 			for _, trafficType := range []string{"ingress", "egress"} {
 				err := r.ReconcileGateway(request, certificate, trafficType)
 				if err != nil {
 					logger.Error(err, "Failed to process CRD removed, reconcile gateway request. Requeue")
 					return reconcile.Result{}, err
 				}
+				logger.Info("Reconcile Gateway object successfully", "trafficType", trafficType)
 			}
 			// Once the CRD has been removed there is no reason to requeue any additional times.
 			return reconcile.Result{}, nil
@@ -114,14 +116,14 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 		return reconcile.Result{}, err
 	}
 
-	logger.Info("Reconcile Secret object.")
+	logger.Info("Reconcile Secret object.", "certificate.Spec.Mode", certificate.Spec.Mode)
 	err = r.ReconcileSecret(request, certificate)
 	if err != nil {
 		logger.Error(err, "Failed to process secret request. Requeue")
 		return reconcile.Result{}, err
 	}
 
-	logger.Info("Reconcile Gateway object.")
+	logger.Info("Reconcile Gateway object.", "certificate.Spec.TrafficType", certificate.Spec.TrafficType)
 	err = r.ReconcileGateway(request, certificate, certificate.Spec.TrafficType)
 	if err != nil {
 		logger.Error(err, "Failed to process gateway request. Requeue")
@@ -132,7 +134,7 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 
 func (r *ReconcileIstioCertificate) ReconcileGateway(request reconcile.Request, certificate *appv1alpha1.IstioCertificate, trafficType string) error {
 	gatewayObj := &istio.Gateway{}
-	err := r.client.Get(context.TODO(), types.NamespacedName{Name: request.Name, Namespace: request.Namespace}, gatewayObj)
+	err := r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType), Namespace: request.Namespace}, gatewayObj)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Ingress and/or Egress Gateway object does not exist (Possibly Expected?)
@@ -143,11 +145,13 @@ func (r *ReconcileIstioCertificate) ReconcileGateway(request reconcile.Request, 
 	}
 
 	// List all IstioCertificate CRDs
+	// TODO: Consider using the client.MatchingLabels() and client.MatchingField() to handle options
 	certificates := &appv1alpha1.IstioCertificateList{}
 	listOps := &client.ListOptions{
 		Namespace:     request.Namespace,
 		FieldSelector: fields.OneTermEqualSelector("spec.trafficType", trafficType),
 	}
+
 	err = r.client.List(context.TODO(), listOps, certificates)
 	if err != nil {
 		return err
@@ -165,7 +169,7 @@ func (r *ReconcileIstioCertificate) ReconcileGateway(request reconcile.Request, 
 
 func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, certificate *appv1alpha1.IstioCertificate) error {
 	secretObj := &corev1.Secret{}
-	key := types.NamespacedName{Name: request.Name, Namespace: request.Namespace}
+	key := types.NamespacedName{Name: fmt.Sprintf("%s-%s-secret", request.Namespace, request.Name), Namespace: request.Namespace}
 	err := r.client.Get(context.TODO(), key, secretObj)
 	if err != nil {
 		if errors.IsNotFound(err) {
