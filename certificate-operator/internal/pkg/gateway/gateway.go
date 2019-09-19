@@ -100,6 +100,20 @@ func Reconcile(g GatewayConfig) *istio.Gateway {
 			Hosts: certificate.Spec.Hosts,
 		})
 	}
+	if len(servers) == 0 {
+		servers = append(servers, defaultServer())
+	}
 	g.Gateway.Spec.Servers = servers
 	return g.Gateway
+}
+
+func defaultServer() istio.Server {
+	return istio.Server{
+		Port: istio.Port{
+			Name:     "http-default",
+			Number:   80,
+			Protocol: "HTTP",
+		},
+		Hosts: []string{"*"},
+	}
 }
