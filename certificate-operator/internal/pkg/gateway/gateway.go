@@ -10,14 +10,14 @@ import (
 	istio "knative.dev/pkg/apis/istio/v1alpha3"
 )
 
-type Gateway struct {
+type GatewayConfig struct {
 	Name         string
 	TrafficType  string
 	Certificates *appv1alpha1.IstioCertificateList
 	Gateway      *istio.Gateway
 }
 
-func Reconcile(g Gateway) *istio.Gateway {
+func Reconcile(g GatewayConfig) *istio.Gateway {
 	// Create empty server stanza array
 	servers := []istio.Server{}
 

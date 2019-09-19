@@ -6,14 +6,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type Secret struct {
+type SecretConfig struct {
 	Name      string
 	Namespace string
 	Labels    map[string]string
 	Owner     *appv1alpha1.IstioCertificate
 }
 
-func Reconcile(s Secret) *corev1.Secret {
+func Reconcile(s SecretConfig) *corev1.Secret {
 	return &corev1.Secret{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Secret",

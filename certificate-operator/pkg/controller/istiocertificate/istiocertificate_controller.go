@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	gw "github.com/xUnholy/k8s-operator/internal/pkg/gateway"
-	sec "github.com/xUnholy/k8s-operator/internal/pkg/secret"
+	gateway "github.com/xUnholy/k8s-operator/internal/pkg/gateway"
+	secret "github.com/xUnholy/k8s-operator/internal/pkg/secret"
 
 	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
 	// istio "istio.io/api/networking/v1alpha3"
@@ -153,42 +153,40 @@ func (r *ReconcileIstioCertificate) ReconcileGateway(request reconcile.Request, 
 		return err
 	}
 
-	g := gw.Gateway{
+	g := gateway.GatewayConfig{
 		Name:         fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType),
 		TrafficType:  trafficType,
 		Certificates: certificates,
 		Gateway:      gatewayObj,
 	}
-	reconciledGatewayObj := gw.Reconcile(g)
-	err = r.client.Update(context.TODO(), reconciledGatewayObj)
-	if err != nil {
-		return err
-	}
-	return nil
+	reconciledGatewayObj := gateway.Reconcile(g)
+	return r.client.Update(context.TODO(), reconciledGatewayObj)
 }
 
 func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, certificate *appv1alpha1.IstioCertificate) error {
-	secret := &corev1.Secret{}
+	secretObj := &corev1.Secret{}
 	key := types.NamespacedName{Name: request.Name, Namespace: request.Namespace}
-	err := r.client.Get(context.TODO(), key, secret)
+	err := r.client.Get(context.TODO(), key, secretObj)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			s := sec.Secret{
+			s := secret.SecretConfig{
 				Name:      fmt.Sprintf("%s-%s-secret", request.Namespace, request.Name),
 				Namespace: secretNamespace(certificate),
 				Labels:    map[string]string{"Namespace": request.Namespace},
 				Owner:     certificate,
 			}
-			reconciledSecretObj := sec.Reconcile(s)
+			reconciledSecretObj := secret.Reconcile(s)
 			err := r.client.Create(context.TODO(), reconciledSecretObj)
 			if err != nil {
 				return err
 			}
-			err = controllerutil.SetControllerReference(certificate, reconciledSecretObj, r.scheme)
-			if err != nil {
-				return err
-			}
-			return nil
+
+			// SetControllerReference sets owner as a Controller OwnerReference on owned.
+			// This is used for garbage collection of the owned object and for
+			// reconciling the owner object on changes to owned (with a Watch + EnqueueRequestForOwner).
+			// Since only one OwnerReference can be a controller, it returns an error if
+			// there is another OwnerReference with Controller flag set.
+			return controllerutil.SetControllerReference(certificate, reconciledSecretObj, r.scheme)
 		}
 		return err
 	}
