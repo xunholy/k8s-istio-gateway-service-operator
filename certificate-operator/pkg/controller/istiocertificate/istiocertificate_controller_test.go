@@ -201,7 +201,7 @@ func TestIstioCertificateControllerReconciler_Simple_2(t *testing.T) {
 
 	gateway := &istio.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
+			Name:      fmt.Sprintf("%s-egress-gateway", namespace),
 			Namespace: namespace,
 		},
 		Spec: istio.GatewaySpec{
