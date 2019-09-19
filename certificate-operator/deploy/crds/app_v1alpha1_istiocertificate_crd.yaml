@@ -56,7 +56,6 @@ spec:
               type: string
             name:
               description: Unique name of resource
-              maxLength: 15
               minLength: 1
               type: string
             port:
