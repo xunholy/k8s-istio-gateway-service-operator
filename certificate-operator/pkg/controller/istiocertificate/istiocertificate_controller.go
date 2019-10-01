@@ -3,7 +3,6 @@ package istiocertificate
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	gateway "github.com/xUnholy/k8s-operator/internal/pkg/gateway"
 	secret "github.com/xUnholy/k8s-operator/internal/pkg/secret"
@@ -205,7 +204,7 @@ func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, c
 // TODO: If a secret is SIMPLE and eventually becomes PASSTHROUGH the orignial secret is not cleaned up in istio-system.
 // However, when the CRD is removed due to ownership both secrets will be cleaned up appropriately.
 func secretNamespace(c *appv1alpha1.IstioCertificate) string {
-	if strings.ToUpper(c.Spec.Mode) == "SIMPLE" {
+	if c.Spec.Mode == "SIMPLE" {
 		return "istio-system"
 	}
 	// Assume PASSTHROUGH has been declared

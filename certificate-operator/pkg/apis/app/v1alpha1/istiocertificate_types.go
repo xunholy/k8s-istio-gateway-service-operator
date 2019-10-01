@@ -2,6 +2,10 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
+	// networkv3 "istio.io/api/networking/v1alpha3"
+	networkv3 "knative.dev/pkg/apis/istio/v1alpha3"
 )
 
 // IstioCertificateSpec defines the desired state of IstioCertificate
@@ -20,33 +24,33 @@ type IstioCertificateSpec struct {
 	// +kubebuilder:validation:Maximum=65535
 	Port int `json:"port"`
 
-	// Options: "simple" or "passthrough"
+	// Options: SIMPLE|PASSTHROUGH|MUTUAL
 	// +kubebuilder:validation:Enum=SIMPLE,PASSTHROUGH,MUTUAL
-	Mode string `json:"mode"`
+	Mode networkv3.TLSMode `json:"mode"`
+
+	// Options: HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP
+	// +kubebuilder:validation:Enum=HTTP,HTTPS,GRPC,HTTP2,MONGO,TCP
+	Protocol networkv3.PortProtocol `json:"protocol"`
 
 	// Options: "ingress" or "egress"
 	// +kubebuilder:validation:Enum=ingress,egress
 	TrafficType string `json:"trafficType"`
 
 	// Secret map with each key which is base64 encoded
-	// +kubebuilder:validation:MinItems=1
-	// +kubebuilder:validation:UniqueItems=false
-	Key []byte `json:"key"`
-
-	KeyPath string `json:"keyPath,omitempty"`
-
-	// Secret map with each key which is base64 encoded
-	// +kubebuilder:validation:MinItems=1
 	// +kubebuilder:validation:UniqueItems=false
 	Cert []byte `json:"cert"`
 
-	CertPath string `json:"certPath,omitempty"`
+	// Secret map with each key which is base64 encoded
+	// +kubebuilder:validation:UniqueItems=false
+	Key []byte `json:"key"`
 
-	// Options: "fileMount" or "secret"
-	// fileMount is Required if using CertPath and KeyPath.
-	// Determines if the TLS stanza on the gateway object should reference a fileMount of Kubernetes secret
-	// +kubebuilder:validation:Enum=fileMount,secret
-	SecretType string `json:"secretType"`
+	// Specifies TLS Cert/Key Path if not using SDS
+	TLSSecret TLSSecret `json:"tlsSecret"`
+}
+
+type TLSSecret struct {
+	CertPath string `json:"certPath,omitempty"`
+	KeyPath  string `json:"keyPath,omitempty"`
 }
 
 // IstioCertificateStatus defines the observed state of IstioCertificate

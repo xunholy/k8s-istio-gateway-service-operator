@@ -6,25 +6,26 @@ import (
 	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
 
 	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
-	// istio "istio.io/api/networking/v1alpha3"
-	istio "knative.dev/pkg/apis/istio/v1alpha3"
+	// networkv3 "istio.io/api/networking/v1alpha3"
+	networkv3 "knative.dev/pkg/apis/istio/v1alpha3"
 )
 
 type GatewayConfig struct {
 	Name         string
 	TrafficType  string
 	Certificates *appv1alpha1.IstioCertificateList
-	Gateway      *istio.Gateway
+	Gateway      *networkv3.Gateway
 }
 
-func Reconcile(g GatewayConfig) *istio.Gateway {
+func Reconcile(g GatewayConfig) *networkv3.Gateway {
 	// Create empty server stanza array
-	servers := []istio.Server{}
+	servers := []networkv3.Server{}
+	tlsSecret := appv1alpha1.TLSSecret{}
 
 	// Add all certificate server entries into servers array
 	for _, certificate := range g.Certificates.Items {
 		// Secrets will be default to using Kubernetes secret objects leveraging SDS
-		secretRef := &istio.TLSOptions{
+		secretRef := &networkv3.TLSOptions{
 			// The credentialName stands for a unique identifier that can be used
 			// to identify the serverCertificate and the privateKey. The
 			// credentialName appended with suffix "-cacert" is used to identify
@@ -46,42 +47,42 @@ func Reconcile(g GatewayConfig) *istio.Gateway {
 			// Optional: Indicates whether connections to this port should be
 			// secured using TLS. The value of this field determines how TLS is
 			// enforced.
-			Mode: knativeTLSMode(certificate.Spec.Mode),
+			Mode: certificate.Spec.Mode,
 		}
-		if certificate.Spec.SecretType == "fileMount" {
+		if certificate.Spec.TLSSecret != tlsSecret {
 
 			// TODO: This would require the Istio GW pod to be restarted to pickup secrets
 			// Restart pod using respective labels for ingres/egress and bounce pods based
 			// of a strategic percentage for optimization, perhaps include a grace period.
-			secretRef = &istio.TLSOptions{
+			secretRef = &networkv3.TLSOptions{
 				// REQUIRED if mode is "SIMPLE" or "MUTUAL". The path to the file
 				// holding the server-side TLS certificate to use.
-				ServerCertificate: certificate.Spec.CertPath,
+				ServerCertificate: certificate.Spec.TLSSecret.CertPath,
 
 				// REQUIRED if mode is "SIMPLE" or "MUTUAL". The path to the file
 				// holding the server's private key.
-				PrivateKey: certificate.Spec.KeyPath,
+				PrivateKey: certificate.Spec.TLSSecret.KeyPath,
 
 				// Optional: Indicates whether connections to this port should be
 				// secured using TLS. The value of this field determines how TLS is
 				// enforced.
-				Mode: knativeTLSMode(certificate.Spec.Mode),
+				Mode: certificate.Spec.Mode,
 			}
 
 		}
-		servers = append(servers, istio.Server{
+		servers = append(servers, networkv3.Server{
 			// REQUIRED: The Port on which the proxy should listen for incoming
 			// connections
-			Port: istio.Port{
+			Port: networkv3.Port{
 				// Label assigned to the port.
-				Name: fmt.Sprintf("https-%s", certificate.Spec.Name),
+				Name: fmt.Sprintf("%s-%s", certificate.Spec.Protocol, certificate.Spec.Name),
 
 				// REQUIRED: A valid non-negative integer port number.
 				Number: certificate.Spec.Port,
 
 				// REQUIRED: The protocol exposed on the port.
 				// MUST BE one of HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP.
-				Protocol: "HTTPS",
+				Protocol: certificate.Spec.Protocol,
 			},
 
 			// Set of TLS related options that govern the server's behavior. Use
@@ -108,9 +109,9 @@ func Reconcile(g GatewayConfig) *istio.Gateway {
 	return g.Gateway
 }
 
-func defaultServer() istio.Server {
-	return istio.Server{
-		Port: istio.Port{
+func defaultServer() networkv3.Server {
+	return networkv3.Server{
+		Port: networkv3.Port{
 			Name:     "http-default",
 			Number:   80,
 			Protocol: "HTTP",
