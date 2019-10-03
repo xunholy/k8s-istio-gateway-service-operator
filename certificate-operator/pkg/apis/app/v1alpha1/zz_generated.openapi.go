@@ -114,30 +114,18 @@ func schema_pkg_apis_app_v1alpha1_IstioCertificateSpec(ref common.ReferenceCallb
 							Format:      "",
 						},
 					},
-					"tlsSecret": {
+					"tlsOptions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Specifies TLS Cert/Key to be created",
-							Ref:         ref("./pkg/apis/app/v1alpha1.TLSSecret"),
-						},
-					},
-					"tlsSecretRef": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Specifies the TLS Secret",
-							Ref:         ref("./pkg/apis/app/v1alpha1.TLSSecretRef"),
-						},
-					},
-					"tlsSecretPath": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Specifies TLS Cert/Key Path if not using SDS",
-							Ref:         ref("./pkg/apis/app/v1alpha1.TLSSecretPath"),
+							Description: "Options: TLSSecret|TLSSecretRef|TLSSecretPath Supports either creating the secret, referencing the secret, or explicitly referencing the mount path in the pod.",
+							Ref:         ref("./pkg/apis/app/v1alpha1.TLSOptions"),
 						},
 					},
 				},
-				Required: []string{"name", "hosts", "port", "mode", "protocol", "trafficType", "tlsSecret", "tlsSecretRef", "tlsSecretPath"},
+				Required: []string{"name", "hosts", "port", "mode", "protocol", "trafficType", "tlsOptions"},
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/app/v1alpha1.TLSSecret", "./pkg/apis/app/v1alpha1.TLSSecretPath", "./pkg/apis/app/v1alpha1.TLSSecretRef"},
+			"./pkg/apis/app/v1alpha1.TLSOptions"},
 	}
 }
 

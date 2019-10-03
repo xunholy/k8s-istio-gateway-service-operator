@@ -36,6 +36,12 @@ type IstioCertificateSpec struct {
 	// +kubebuilder:validation:Enum=ingress,egress
 	TrafficType string `json:"trafficType"`
 
+	// Options: TLSSecret|TLSSecretRef|TLSSecretPath
+	// Supports either creating the secret, referencing the secret, or explicitly referencing the mount path in the pod.
+	TLSOptions TLSOptions `json:"tlsOptions"`
+}
+
+type TLSOptions struct {
 	// TODO: Validation must be added to ensure multiple of these values are not set - TLSSecret|TLSSecretRef|TLSSecretPath
 	// Specifies TLS Cert/Key to be created
 	TLSSecret *TLSSecret `json:"tlsSecret"`

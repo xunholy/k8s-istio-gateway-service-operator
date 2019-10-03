@@ -61,35 +61,46 @@ spec:
               - MONGO
               - TCP
               type: string
-            tlsSecret:
-              description: 'TODO: Validation must be added to ensure multiple of these
-                values are not set - TLSSecret|TLSSecretRef|TLSSecretPath Specifies
-                TLS Cert/Key to be created'
+            tlsOptions:
+              description: 'Options: TLSSecret|TLSSecretRef|TLSSecretPath Supports
+                either creating the secret, referencing the secret, or explicitly
+                referencing the mount path in the pod.'
               properties:
-                cert:
-                  description: Secret map with each key which is base64 encoded
-                  format: byte
-                  type: string
-                key:
-                  description: Secret map with each key which is base64 encoded
-                  format: byte
-                  type: string
-              type: object
-            tlsSecretPath:
-              description: Specifies TLS Cert/Key Path if not using SDS
-              properties:
-                certPath:
-                  description: Specifies the TLS Certificate Path in the running Pod
-                  type: string
-                keyPath:
-                  description: Specifies the TLS Key Path in the running Pod
-                  type: string
-              type: object
-            tlsSecretRef:
-              description: Specifies the TLS Secret
-              properties:
-                secretName:
-                  type: string
+                tlsSecret:
+                  description: 'TODO: Validation must be added to ensure multiple
+                    of these values are not set - TLSSecret|TLSSecretRef|TLSSecretPath
+                    Specifies TLS Cert/Key to be created'
+                  properties:
+                    cert:
+                      description: Secret map with each key which is base64 encoded
+                      format: byte
+                      type: string
+                    key:
+                      description: Secret map with each key which is base64 encoded
+                      format: byte
+                      type: string
+                  type: object
+                tlsSecretPath:
+                  description: Specifies TLS Cert/Key Path if not using SDS
+                  properties:
+                    certPath:
+                      description: Specifies the TLS Certificate Path in the running
+                        Pod
+                      type: string
+                    keyPath:
+                      description: Specifies the TLS Key Path in the running Pod
+                      type: string
+                  type: object
+                tlsSecretRef:
+                  description: Specifies the TLS Secret
+                  properties:
+                    secretName:
+                      type: string
+                  type: object
+              required:
+              - tlsSecret
+              - tlsSecretRef
+              - tlsSecretPath
               type: object
             trafficType:
               description: 'Options: "ingress" or "egress"'
@@ -104,9 +115,7 @@ spec:
           - mode
           - protocol
           - trafficType
-          - tlsSecret
-          - tlsSecretRef
-          - tlsSecretPath
+          - tlsOptions
           type: object
         status:
           type: object
