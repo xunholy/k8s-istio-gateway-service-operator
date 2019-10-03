@@ -95,11 +95,13 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 		return reconcile.Result{}, nil
 	}
 
-	logger.Info("Reconcile Secret object.", "certificate.Spec.Mode", certificate.Spec.Mode)
-	err = r.ReconcileSecret(request, certificate)
-	if err != nil {
-		logger.Error(err, "Failed to process secret request. Requeue")
-		return reconcile.Result{}, err
+	if certificate.Spec.TLSSecret != nil {
+		logger.Info("Reconcile Secret object.", "certificate.Spec.Mode", certificate.Spec.Mode)
+		err = r.ReconcileSecret(request, certificate)
+		if err != nil {
+			logger.Error(err, "Failed to process secret request. Requeue")
+			return reconcile.Result{}, err
+		}
 	}
 
 	logger.Info("Reconcile Gateway object.", "certificate.Spec.TrafficType", certificate.Spec.TrafficType)
@@ -177,10 +179,10 @@ func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, c
 	if err != nil {
 		if errors.IsNotFound(err) {
 			s := secret.SecretConfig{
-				Name:      fmt.Sprintf("%s-%s-secret", request.Namespace, request.Name),
-				Namespace: secretNamespace(certificate),
-				Labels:    map[string]string{"Namespace": request.Namespace},
-				Owner:     certificate,
+				Name:        fmt.Sprintf("%s-%s-secret", request.Namespace, request.Name),
+				Namespace:   secretNamespace(certificate),
+				Labels:      map[string]string{"Namespace": request.Namespace},
+				Certificate: certificate,
 			}
 			reconciledSecretObj := secret.Reconcile(s)
 

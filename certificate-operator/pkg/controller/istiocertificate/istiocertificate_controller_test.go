@@ -12,12 +12,12 @@ import (
 	// networkv3 "istio.io/api/networking/v1alpha3"
 	networkv3 "knative.dev/pkg/apis/istio/v1alpha3"
 
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func TestIstioCertificateController(t *testing.T) {
@@ -36,11 +36,13 @@ func TestIstioCertificateController(t *testing.T) {
 			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "SIMPLE",
-			Key:         []byte{1, 2},
-			Cert:        []byte{1, 2},
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
+			TLSSecret: &appv1alpha1.TLSSecret{
+				Cert: []byte{1, 2},
+				Key:  []byte{1, 2},
+			},
 		},
 	}
 
@@ -130,11 +132,13 @@ func TestIstioCertificateControllerReconciler_Simple(t *testing.T) {
 			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "SIMPLE",
-			Key:         []byte{1, 2},
-			Cert:        []byte{1, 2},
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
+			TLSSecret: &appv1alpha1.TLSSecret{
+				Cert: []byte{1, 2},
+				Key:  []byte{1, 2},
+			},
 		},
 	}
 
@@ -193,11 +197,13 @@ func TestIstioCertificateControllerReconciler_Simple_2(t *testing.T) {
 			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "SIMPLE",
-			Key:         []byte{1, 2},
-			Cert:        []byte{1, 2},
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "egress",
+			TLSSecret: &appv1alpha1.TLSSecret{
+				Cert: []byte{1, 2},
+				Key:  []byte{1, 2},
+			},
 		},
 	}
 
@@ -280,11 +286,13 @@ func TestIstioCertificateControllerReconciler_Passthrough(t *testing.T) {
 			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "PASSTHROUGH",
-			Key:         []byte{1, 2},
-			Cert:        []byte{1, 2},
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
+			TLSSecret: &appv1alpha1.TLSSecret{
+				Cert: []byte{1, 2},
+				Key:  []byte{1, 2},
+			},
 		},
 	}
 
@@ -343,11 +351,13 @@ func TestIstioCertificateControllerReconciler_Passthrough_2(t *testing.T) {
 			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "PASSTHROUGH",
-			Key:         []byte{1, 2},
-			Cert:        []byte{1, 2},
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
+			TLSSecret: &appv1alpha1.TLSSecret{
+				Cert: []byte{1, 2},
+				Key:  []byte{1, 2},
+			},
 		},
 	}
 

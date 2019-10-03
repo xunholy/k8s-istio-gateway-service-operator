@@ -37,13 +37,14 @@ spec:
   hosts:
     - "*"
   port: 443
+  protocol: HTTPS
   mode: SIMPLE
-  trafficType: ingress # trafficType can be either Ingress or Egress 
-  secretType: secret
+  trafficType: ingress
   cert: <base64 encoded cert>
-  certPath: "" # Only required if secretType is set to fileMount - Will be omitted if empty
   key: <base64 encoded key>
-  keyPath: "" # Only required if secretType is set to fileMount - Will be omitted if empty
+  tlsSecret:
+    keyPath: ""
+    certPath: ""
 ```
 
 ## Local Setup

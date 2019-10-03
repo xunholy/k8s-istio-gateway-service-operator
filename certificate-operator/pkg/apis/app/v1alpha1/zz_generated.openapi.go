@@ -114,31 +114,30 @@ func schema_pkg_apis_app_v1alpha1_IstioCertificateSpec(ref common.ReferenceCallb
 							Format:      "",
 						},
 					},
-					"cert": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Secret map with each key which is base64 encoded",
-							Type:        []string{"string"},
-							Format:      "byte",
-						},
-					},
-					"key": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Secret map with each key which is base64 encoded",
-							Type:        []string{"string"},
-							Format:      "byte",
-						},
-					},
 					"tlsSecret": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/app/v1alpha1.TLSSecret"),
+							Description: "Specifies TLS Cert/Key to be created",
+							Ref:         ref("./pkg/apis/app/v1alpha1.TLSSecret"),
+						},
+					},
+					"tlsSecretRef": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies the TLS Secret",
+							Ref:         ref("./pkg/apis/app/v1alpha1.TLSSecretRef"),
+						},
+					},
+					"tlsSecretPath": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Specifies TLS Cert/Key Path if not using SDS",
+							Ref:         ref("./pkg/apis/app/v1alpha1.TLSSecretPath"),
 						},
 					},
 				},
-				Required: []string{"name", "hosts", "port", "mode", "protocol", "trafficType", "cert", "key", "tlsSecret"},
+				Required: []string{"name", "hosts", "port", "mode", "protocol", "trafficType", "tlsSecret", "tlsSecretRef", "tlsSecretPath"},
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/app/v1alpha1.TLSSecret"},
+			"./pkg/apis/app/v1alpha1.TLSSecret", "./pkg/apis/app/v1alpha1.TLSSecretPath", "./pkg/apis/app/v1alpha1.TLSSecretRef"},
 	}
 }
 

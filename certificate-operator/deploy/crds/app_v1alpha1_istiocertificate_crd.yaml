@@ -29,20 +29,12 @@ spec:
           type: object
         spec:
           properties:
-            cert:
-              description: Secret map with each key which is base64 encoded
-              format: byte
-              type: string
             hosts:
               description: List of Servers > map of list of hosts and port
               items:
                 type: string
               minItems: 1
               type: array
-            key:
-              description: Secret map with each key which is base64 encoded
-              format: byte
-              type: string
             mode:
               description: 'Options: SIMPLE|PASSTHROUGH|MUTUAL'
               enum:
@@ -70,10 +62,33 @@ spec:
               - TCP
               type: string
             tlsSecret:
+              description: 'TODO: Validation must be added to ensure multiple of these
+                values are not set - TLSSecret|TLSSecretRef|TLSSecretPath Specifies
+                TLS Cert/Key to be created'
+              properties:
+                cert:
+                  description: Secret map with each key which is base64 encoded
+                  format: byte
+                  type: string
+                key:
+                  description: Secret map with each key which is base64 encoded
+                  format: byte
+                  type: string
+              type: object
+            tlsSecretPath:
+              description: Specifies TLS Cert/Key Path if not using SDS
               properties:
                 certPath:
+                  description: Specifies the TLS Certificate Path in the running Pod
                   type: string
                 keyPath:
+                  description: Specifies the TLS Key Path in the running Pod
+                  type: string
+              type: object
+            tlsSecretRef:
+              description: Specifies the TLS Secret
+              properties:
+                secretName:
                   type: string
               type: object
             trafficType:
@@ -89,9 +104,9 @@ spec:
           - mode
           - protocol
           - trafficType
-          - cert
-          - key
           - tlsSecret
+          - tlsSecretRef
+          - tlsSecretPath
           type: object
         status:
           type: object

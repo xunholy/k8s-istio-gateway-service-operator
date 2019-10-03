@@ -36,21 +36,36 @@ type IstioCertificateSpec struct {
 	// +kubebuilder:validation:Enum=ingress,egress
 	TrafficType string `json:"trafficType"`
 
-	// Secret map with each key which is base64 encoded
-	// +kubebuilder:validation:UniqueItems=false
-	Cert []byte `json:"cert"`
+	// TODO: Validation must be added to ensure multiple of these values are not set - TLSSecret|TLSSecretRef|TLSSecretPath
+	// Specifies TLS Cert/Key to be created
+	TLSSecret *TLSSecret `json:"tlsSecret"`
 
-	// Secret map with each key which is base64 encoded
-	// +kubebuilder:validation:UniqueItems=false
-	Key []byte `json:"key"`
+	// Specifies the TLS Secret
+	TLSSecretRef *TLSSecretRef `json:"tlsSecretRef"`
 
 	// Specifies TLS Cert/Key Path if not using SDS
-	TLSSecret TLSSecret `json:"tlsSecret"`
+	TLSSecretPath *TLSSecretPath `json:"tlsSecretPath"`
+}
+
+type TLSSecretRef struct {
+	SecretName string `json:"secretName,omitempty"`
 }
 
 type TLSSecret struct {
+	// Secret map with each key which is base64 encoded
+	// +kubebuilder:validation:UniqueItems=false
+	Cert []byte `json:"cert,omitempty"`
+
+	// Secret map with each key which is base64 encoded
+	// +kubebuilder:validation:UniqueItems=false
+	Key []byte `json:"key,omitempty"`
+}
+
+type TLSSecretPath struct {
+	// Specifies the TLS Certificate Path in the running Pod
 	CertPath string `json:"certPath,omitempty"`
-	KeyPath  string `json:"keyPath,omitempty"`
+	// Specifies the TLS Key Path in the running Pod
+	KeyPath string `json:"keyPath,omitempty"`
 }
 
 // IstioCertificateStatus defines the observed state of IstioCertificate

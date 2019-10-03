@@ -20,7 +20,6 @@ type GatewayConfig struct {
 func Reconcile(g GatewayConfig) *networkv3.Gateway {
 	// Create empty server stanza array
 	servers := []networkv3.Server{}
-	tlsSecret := appv1alpha1.TLSSecret{}
 
 	// Add all certificate server entries into servers array
 	for _, certificate := range g.Certificates.Items {
@@ -49,7 +48,14 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 			// enforced.
 			Mode: certificate.Spec.Mode,
 		}
-		if certificate.Spec.TLSSecret != tlsSecret {
+		if certificate.Spec.TLSSecretRef != nil {
+			// TODO: Document this block and its usecase
+			secretRef = &networkv3.TLSOptions{
+				CredentialName: certificate.Spec.TLSSecretRef.SecretName,
+				Mode:           certificate.Spec.Mode,
+			}
+		}
+		if certificate.Spec.TLSSecretPath != nil {
 
 			// TODO: This would require the Istio GW pod to be restarted to pickup secrets
 			// Restart pod using respective labels for ingres/egress and bounce pods based
@@ -57,11 +63,11 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 			secretRef = &networkv3.TLSOptions{
 				// REQUIRED if mode is "SIMPLE" or "MUTUAL". The path to the file
 				// holding the server-side TLS certificate to use.
-				ServerCertificate: certificate.Spec.TLSSecret.CertPath,
+				ServerCertificate: certificate.Spec.TLSSecretPath.CertPath,
 
 				// REQUIRED if mode is "SIMPLE" or "MUTUAL". The path to the file
 				// holding the server's private key.
-				PrivateKey: certificate.Spec.TLSSecret.KeyPath,
+				PrivateKey: certificate.Spec.TLSSecretPath.KeyPath,
 
 				// Optional: Indicates whether connections to this port should be
 				// secured using TLS. The value of this field determines how TLS is
