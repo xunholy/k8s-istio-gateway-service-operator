@@ -33,7 +33,6 @@ func TestIstioCertificateController(t *testing.T) {
 			Namespace: namespace,
 		},
 		Spec: appv1alpha1.IstioCertificateSpec{
-			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "SIMPLE",
 			Port:        80,
@@ -131,7 +130,6 @@ func TestIstioCertificateControllerReconciler_Simple(t *testing.T) {
 			Namespace: namespace,
 		},
 		Spec: appv1alpha1.IstioCertificateSpec{
-			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "SIMPLE",
 			Port:        80,
@@ -198,7 +196,6 @@ func TestIstioCertificateControllerReconciler_Simple_2(t *testing.T) {
 			Namespace: namespace,
 		},
 		Spec: appv1alpha1.IstioCertificateSpec{
-			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "SIMPLE",
 			Port:        80,
@@ -289,7 +286,6 @@ func TestIstioCertificateControllerReconciler_Passthrough(t *testing.T) {
 			Namespace: namespace,
 		},
 		Spec: appv1alpha1.IstioCertificateSpec{
-			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "PASSTHROUGH",
 			Port:        80,
@@ -356,7 +352,6 @@ func TestIstioCertificateControllerReconciler_Passthrough_2(t *testing.T) {
 			Namespace: namespace,
 		},
 		Spec: appv1alpha1.IstioCertificateSpec{
-			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "PASSTHROUGH",
 			Port:        80,

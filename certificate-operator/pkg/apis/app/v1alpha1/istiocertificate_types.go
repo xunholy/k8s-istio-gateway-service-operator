@@ -11,10 +11,6 @@ import (
 // IstioCertificateSpec defines the desired state of IstioCertificate
 // +k8s:openapi-gen=true
 type IstioCertificateSpec struct {
-	// Unique name of resource
-	// +kubebuilder:validation:MinLength=1
-	Name string `json:"name"`
-
 	// List of Servers > map of list of hosts and port
 	// +kubebuilder:validation:UniqueItems=false
 	// +kubebuilder:validation:MinItems=1
@@ -43,7 +39,7 @@ type IstioCertificateSpec struct {
 
 type TLSOptions struct {
 	// TODO: Validation must be added to ensure multiple of these values are not set - TLSSecret|TLSSecretRef|TLSSecretPath
-	// otherwise there should be some form of heirachy presidence for which overrides other set values.
+	// otherwise there should be some form of hierarchy precedence for which overrides other set values.
 	// Specifies TLS Cert/Key to be created
 	// +optional
 	TLSSecret *TLSSecret `json:"tlsSecret,omitempty"`
