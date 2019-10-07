@@ -33,7 +33,6 @@ metadata:
   name: example-istio-certificate
   namespace: default
 spec:
-  name: example-istio-certificate
   hosts:
     - "*.example.com"
   port: 443
