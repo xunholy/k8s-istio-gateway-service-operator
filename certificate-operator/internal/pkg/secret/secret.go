@@ -7,10 +7,10 @@ import (
 )
 
 type SecretConfig struct {
-	Name      string
-	Namespace string
-	Labels    map[string]string
-	Owner     *appv1alpha1.IstioCertificate
+	Name        string
+	Namespace   string
+	Labels      map[string]string
+	Certificate *appv1alpha1.IstioCertificate
 }
 
 func Reconcile(s SecretConfig) *corev1.Secret {
@@ -29,8 +29,8 @@ func Reconcile(s SecretConfig) *corev1.Secret {
 		// base64 encoded string, representing the arbitrary (possibly non-string)
 		// data value here. Described in https://tools.ietf.org/html/rfc4648#section-4
 		Data: map[string][]byte{
-			"tls.key": s.Owner.Spec.Key,
-			"tls.crt": s.Owner.Spec.Cert,
+			"tls.key": s.Certificate.Spec.TLSOptions.TLSSecret.Key,
+			"tls.crt": s.Certificate.Spec.TLSOptions.TLSSecret.Cert,
 		},
 		// Used to facilitate programmatic handling of secret data.
 		Type: "kubernetes.io/tls",

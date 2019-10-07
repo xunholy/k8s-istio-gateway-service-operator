@@ -7,15 +7,17 @@ import (
 
 	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
 	"k8s.io/client-go/kubernetes/scheme"
-	istio "knative.dev/pkg/apis/istio/v1alpha3"
 
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
+	// networkv3 "istio.io/api/networking/v1alpha3"
+	networkv3 "knative.dev/pkg/apis/istio/v1alpha3"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 func TestIstioCertificateController(t *testing.T) {
@@ -25,7 +27,7 @@ func TestIstioCertificateController(t *testing.T) {
 	)
 
 	// A TestIstioCertificate resource with metadata and spec.
-	certificates := &appv1alpha1.IstioCertificate{
+	certificate := &appv1alpha1.IstioCertificate{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -34,23 +36,27 @@ func TestIstioCertificateController(t *testing.T) {
 			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "SIMPLE",
-			Key:         []byte{1, 2},
-			Cert:        []byte{1, 2},
 			Port:        80,
+			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			SecretType:  "secret",
+			TLSOptions: appv1alpha1.TLSOptions{
+				TLSSecret: &appv1alpha1.TLSSecret{
+					Cert: []byte{1, 2},
+					Key:  []byte{1, 2},
+				},
+			},
 		},
 	}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificates}
+	objs := []runtime.Object{certificate}
 
 	// List ANZCertificate objects filtering by labels
 	certificatesList := &appv1alpha1.IstioCertificateList{}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, certificates, certificatesList)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, certificate, certificatesList)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -77,16 +83,16 @@ func TestIstioCertificateControllerReconciler_Removed(t *testing.T) {
 	)
 
 	// A TestIstioCertificate resource with metadata and spec.
-	certificates := &appv1alpha1.IstioCertificate{}
+	certificate := &appv1alpha1.IstioCertificate{}
 
-	gateway := &istio.Gateway{}
+	gateway := &networkv3.Gateway{}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificates}
+	objs := []runtime.Object{certificate}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificates)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -119,7 +125,7 @@ func TestIstioCertificateControllerReconciler_Simple(t *testing.T) {
 	)
 
 	// A TestIstioCertificate resource with metadata and spec.
-	certificates := &appv1alpha1.IstioCertificate{
+	certificate := &appv1alpha1.IstioCertificate{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -128,22 +134,26 @@ func TestIstioCertificateControllerReconciler_Simple(t *testing.T) {
 			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "SIMPLE",
-			Key:         []byte{1, 2},
-			Cert:        []byte{1, 2},
 			Port:        80,
+			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			SecretType:  "secret",
+			TLSOptions: appv1alpha1.TLSOptions{
+				TLSSecret: &appv1alpha1.TLSSecret{
+					Cert: []byte{1, 2},
+					Key:  []byte{1, 2},
+				},
+			},
 		},
 	}
 
-	gateway := &istio.Gateway{}
+	gateway := &networkv3.Gateway{}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificates}
+	objs := []runtime.Object{certificate}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificates)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -168,7 +178,7 @@ func TestIstioCertificateControllerReconciler_Simple(t *testing.T) {
 		t.Error("reconcile did not requeue request as expected")
 	}
 	// Check if certificates has been created.
-	certificate := &appv1alpha1.IstioCertificate{}
+	certificate = &appv1alpha1.IstioCertificate{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, certificate)
 	if err != nil {
 		t.Fatalf("get IstioCertificate: (%v)", err)
@@ -182,7 +192,7 @@ func TestIstioCertificateControllerReconciler_Simple_2(t *testing.T) {
 	)
 
 	// A TestIstioCertificate resource with metadata and spec.
-	certificates := &appv1alpha1.IstioCertificate{
+	certificate := &appv1alpha1.IstioCertificate{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -191,31 +201,35 @@ func TestIstioCertificateControllerReconciler_Simple_2(t *testing.T) {
 			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "SIMPLE",
-			Key:         []byte{1, 2},
-			Cert:        []byte{1, 2},
 			Port:        80,
+			Protocol:    "HTTPS",
 			TrafficType: "egress",
-			SecretType:  "secret",
+			TLSOptions: appv1alpha1.TLSOptions{
+				TLSSecret: &appv1alpha1.TLSSecret{
+					Cert: []byte{1, 2},
+					Key:  []byte{1, 2},
+				},
+			},
 		},
 	}
 
-	gateway := &istio.Gateway{
+	gateway := &networkv3.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-egress-gateway", namespace),
 			Namespace: namespace,
 		},
-		Spec: istio.GatewaySpec{
-			Servers: []istio.Server{
+		Spec: networkv3.GatewaySpec{
+			Servers: []networkv3.Server{
 				{
-					Port: istio.Port{
+					Port: networkv3.Port{
 						Name:     fmt.Sprintf("http-%s", name),
 						Number:   80,
 						Protocol: "HTTP",
 					},
 					Hosts: []string{"*"},
-					TLS: &istio.TLSOptions{
-						Mode:           istio.TLSModeSimple,
-						CredentialName: fmt.Sprintf("%s-%s-secret", namespace, name),
+					TLS: &networkv3.TLSOptions{
+						Mode:           networkv3.TLSModeSimple,
+						CredentialName: fmt.Sprintf("%s-%s-secret", name, namespace),
 					},
 				},
 			},
@@ -223,14 +237,14 @@ func TestIstioCertificateControllerReconciler_Simple_2(t *testing.T) {
 	}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificates, gateway}
+	objs := []runtime.Object{certificate, gateway}
 
 	// List ANZCertificate objects filtering by labels
 	certificatesList := &appv1alpha1.IstioCertificateList{}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificates, certificatesList)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate, certificatesList)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -255,7 +269,7 @@ func TestIstioCertificateControllerReconciler_Simple_2(t *testing.T) {
 		t.Error("reconcile did not requeue request as expected")
 	}
 	// Check if certificates has been created.
-	certificate := &appv1alpha1.IstioCertificate{}
+	certificate = &appv1alpha1.IstioCertificate{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, certificate)
 	if err != nil {
 		t.Fatalf("get IstioCertificate: (%v)", err)
@@ -269,7 +283,7 @@ func TestIstioCertificateControllerReconciler_Passthrough(t *testing.T) {
 	)
 
 	// A TestIstioCertificate resource with metadata and spec.
-	certificates := &appv1alpha1.IstioCertificate{
+	certificate := &appv1alpha1.IstioCertificate{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -278,22 +292,26 @@ func TestIstioCertificateControllerReconciler_Passthrough(t *testing.T) {
 			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "PASSTHROUGH",
-			Key:         []byte{1, 2},
-			Cert:        []byte{1, 2},
 			Port:        80,
+			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			SecretType:  "secret",
+			TLSOptions: appv1alpha1.TLSOptions{
+				TLSSecret: &appv1alpha1.TLSSecret{
+					Cert: []byte{1, 2},
+					Key:  []byte{1, 2},
+				},
+			},
 		},
 	}
 
-	gateway := &istio.Gateway{}
+	gateway := &networkv3.Gateway{}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificates}
+	objs := []runtime.Object{certificate}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificates)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -318,7 +336,7 @@ func TestIstioCertificateControllerReconciler_Passthrough(t *testing.T) {
 		t.Error("reconcile did not requeue request as expected")
 	}
 	// Check if certificates has been created.
-	certificate := &appv1alpha1.IstioCertificate{}
+	certificate = &appv1alpha1.IstioCertificate{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, certificate)
 	if err != nil {
 		t.Fatalf("get IstioCertificate: (%v)", err)
@@ -332,7 +350,7 @@ func TestIstioCertificateControllerReconciler_Passthrough_2(t *testing.T) {
 	)
 
 	// A TestIstioCertificate resource with metadata and spec.
-	certificates := &appv1alpha1.IstioCertificate{
+	certificate := &appv1alpha1.IstioCertificate{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -341,30 +359,34 @@ func TestIstioCertificateControllerReconciler_Passthrough_2(t *testing.T) {
 			Name:        name,
 			Hosts:       []string{"*"},
 			Mode:        "PASSTHROUGH",
-			Key:         []byte{1, 2},
-			Cert:        []byte{1, 2},
 			Port:        80,
+			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			SecretType:  "secret",
+			TLSOptions: appv1alpha1.TLSOptions{
+				TLSSecret: &appv1alpha1.TLSSecret{
+					Cert: []byte{1, 2},
+					Key:  []byte{1, 2},
+				},
+			},
 		},
 	}
 
-	gateway := &istio.Gateway{
+	gateway := &networkv3.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
-		Spec: istio.GatewaySpec{
-			Servers: []istio.Server{
+		Spec: networkv3.GatewaySpec{
+			Servers: []networkv3.Server{
 				{
-					Port: istio.Port{
+					Port: networkv3.Port{
 						Name:     fmt.Sprintf("http-%s", name),
 						Number:   80,
 						Protocol: "HTTP",
 					},
 					Hosts: []string{"*"},
-					TLS: &istio.TLSOptions{
-						Mode:              istio.TLSModeSimple,
+					TLS: &networkv3.TLSOptions{
+						Mode:              networkv3.TLSModeSimple,
 						ServerCertificate: "example-cert",
 						PrivateKey:        "example-key",
 					},
@@ -374,14 +396,14 @@ func TestIstioCertificateControllerReconciler_Passthrough_2(t *testing.T) {
 	}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificates, gateway}
+	objs := []runtime.Object{certificate, gateway}
 
 	// List ANZCertificate objects filtering by labels
 	certificatesList := &appv1alpha1.IstioCertificateList{}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificates, certificatesList)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate, certificatesList)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -406,7 +428,7 @@ func TestIstioCertificateControllerReconciler_Passthrough_2(t *testing.T) {
 		t.Error("reconcile did not requeue request as expected")
 	}
 	// Check if certificates has been created.
-	certificate := &appv1alpha1.IstioCertificate{}
+	certificate = &appv1alpha1.IstioCertificate{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, certificate)
 	if err != nil {
 		t.Fatalf("get IstioCertificate: (%v)", err)

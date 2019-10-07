@@ -95,7 +95,14 @@ func schema_pkg_apis_app_v1alpha1_IstioCertificateSpec(ref common.ReferenceCallb
 					},
 					"mode": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Options: \"simple\" or \"passthrough\"",
+							Description: "Options: SIMPLE|PASSTHROUGH|MUTUAL",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"protocol": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Options: HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -107,44 +114,18 @@ func schema_pkg_apis_app_v1alpha1_IstioCertificateSpec(ref common.ReferenceCallb
 							Format:      "",
 						},
 					},
-					"key": {
+					"tlsOptions": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Secret map with each key which is base64 encoded",
-							Type:        []string{"string"},
-							Format:      "byte",
-						},
-					},
-					"keyPath": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"cert": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Secret map with each key which is base64 encoded",
-							Type:        []string{"string"},
-							Format:      "byte",
-						},
-					},
-					"certPath": {
-						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
-						},
-					},
-					"secretType": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Options: \"fileMount\" or \"secret\" fileMount is Required if using CertPath and KeyPath. Determines if the TLS stanza on the gateway object should reference a fileMount of Kubernetes secret",
-							Type:        []string{"string"},
-							Format:      "",
+							Description: "Options: TLSSecret|TLSSecretRef|TLSSecretPath Supports either creating the secret, referencing the secret, or explicitly referencing the mount path in the pod.",
+							Ref:         ref("./pkg/apis/app/v1alpha1.TLSOptions"),
 						},
 					},
 				},
-				Required: []string{"name", "hosts", "port", "mode", "trafficType", "key", "cert", "secretType"},
+				Required: []string{"name", "hosts", "port", "mode", "protocol", "trafficType", "tlsOptions"},
 			},
 		},
-		Dependencies: []string{},
+		Dependencies: []string{
+			"./pkg/apis/app/v1alpha1.TLSOptions"},
 	}
 }
 

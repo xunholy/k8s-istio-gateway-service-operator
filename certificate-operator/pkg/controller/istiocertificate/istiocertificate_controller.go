@@ -3,7 +3,6 @@ package istiocertificate
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	gateway "github.com/xUnholy/k8s-operator/internal/pkg/gateway"
 	secret "github.com/xUnholy/k8s-operator/internal/pkg/secret"
@@ -96,11 +95,13 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 		return reconcile.Result{}, nil
 	}
 
-	logger.Info("Reconcile Secret object.", "certificate.Spec.Mode", certificate.Spec.Mode)
-	err = r.ReconcileSecret(request, certificate)
-	if err != nil {
-		logger.Error(err, "Failed to process secret request. Requeue")
-		return reconcile.Result{}, err
+	if certificate.Spec.TLSOptions.TLSSecret != nil {
+		logger.Info("Reconcile Secret object.", "certificate.Spec.Mode", certificate.Spec.Mode)
+		err = r.ReconcileSecret(request, certificate)
+		if err != nil {
+			logger.Error(err, "Failed to process secret request. Requeue")
+			return reconcile.Result{}, err
+		}
 	}
 
 	logger.Info("Reconcile Gateway object.", "certificate.Spec.TrafficType", certificate.Spec.TrafficType)
@@ -141,8 +142,7 @@ func (r *ReconcileIstioCertificate) ReconcileGateway(request reconcile.Request, 
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType), Namespace: request.Namespace}, gatewayObj)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			// Ingress and/or Egress Gateway object does not exist (Possibly Expected?)
-			// TODO: Should we requeue here?
+			// Ingress and/or Egress Gateway object does not exist.
 			return nil
 		}
 		return err
@@ -173,15 +173,15 @@ func (r *ReconcileIstioCertificate) ReconcileGateway(request reconcile.Request, 
 
 func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, certificate *appv1alpha1.IstioCertificate) error {
 	secretObj := &corev1.Secret{}
-	key := types.NamespacedName{Name: fmt.Sprintf("%s-%s-secret", request.Namespace, request.Name), Namespace: request.Namespace}
+	key := types.NamespacedName{Name: fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace), Namespace: request.Namespace}
 	err := r.client.Get(context.TODO(), key, secretObj)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			s := secret.SecretConfig{
-				Name:      fmt.Sprintf("%s-%s-secret", request.Namespace, request.Name),
-				Namespace: secretNamespace(certificate),
-				Labels:    map[string]string{"Namespace": request.Namespace},
-				Owner:     certificate,
+				Name:        fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
+				Namespace:   secretNamespace(certificate),
+				Labels:      map[string]string{"Namespace": request.Namespace},
+				Certificate: certificate,
 			}
 			reconciledSecretObj := secret.Reconcile(s)
 
@@ -205,7 +205,7 @@ func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, c
 // TODO: If a secret is SIMPLE and eventually becomes PASSTHROUGH the orignial secret is not cleaned up in istio-system.
 // However, when the CRD is removed due to ownership both secrets will be cleaned up appropriately.
 func secretNamespace(c *appv1alpha1.IstioCertificate) string {
-	if strings.ToUpper(c.Spec.Mode) == "SIMPLE" {
+	if c.Spec.Mode == istio.TLSModeSimple {
 		return "istio-system"
 	}
 	// Assume PASSTHROUGH has been declared

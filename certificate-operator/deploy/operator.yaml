@@ -16,7 +16,7 @@ spec:
       containers:
         - name: certificate-operator
           # Replace this with the built image name
-          image: REPLACE_IMAGE
+          image: xunholy/k8s-operator:latest
           command:
             - certificate-operator
           imagePullPolicy: Always

@@ -35,15 +35,30 @@ metadata:
 spec:
   name: example-istio-certificate
   hosts:
-    - "*"
+    - "*.example.com"
   port: 443
+  # options: HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP
+  protocol: HTTPS
+  # options: SIMPLE|PASSTHROUGH|MUTUAL
   mode: SIMPLE
-  trafficType: ingress # trafficType can be either Ingress or Egress 
-  secretType: secret
-  cert: <base64 encoded cert>
-  certPath: "" # Only required if secretType is set to fileMount - Will be omitted if empty
-  key: <base64 encoded key>
-  keyPath: "" # Only required if secretType is set to fileMount - Will be omitted if empty
+  # options: INGRESS|EGRESS
+  trafficType: ingress
+  # TLSOptions not specified are omitted, only one is required.
+  # options: TLSSecret|TLSSecretRef|TLSSecretPath
+  tlsOptions:
+    tlsSecret:
+      # base64 encoded cert
+      cert: ''
+      # base64 encoded key
+      key: ''
+    tlsSecretRef:
+      # reference to existing secret
+      secretName: ''
+    tlsSecretPath:
+      # path to file containing cert.pem in istio gateway pod
+      certPath: ''
+      # path to file containing key.pem in istio gateway pod
+      keyPath: ''
 ```
 
 ## Local Setup

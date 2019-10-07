@@ -29,26 +29,14 @@ spec:
           type: object
         spec:
           properties:
-            cert:
-              description: Secret map with each key which is base64 encoded
-              format: byte
-              type: string
-            certPath:
-              type: string
             hosts:
               description: List of Servers > map of list of hosts and port
               items:
                 type: string
               minItems: 1
               type: array
-            key:
-              description: Secret map with each key which is base64 encoded
-              format: byte
-              type: string
-            keyPath:
-              type: string
             mode:
-              description: 'Options: "simple" or "passthrough"'
+              description: 'Options: SIMPLE|PASSTHROUGH|MUTUAL'
               enum:
               - SIMPLE
               - PASSTHROUGH
@@ -63,14 +51,55 @@ spec:
               maximum: 65535
               minimum: 1
               type: integer
-            secretType:
-              description: 'Options: "fileMount" or "secret" fileMount is Required
-                if using CertPath and KeyPath. Determines if the TLS stanza on the
-                gateway object should reference a fileMount of Kubernetes secret'
+            protocol:
+              description: 'Options: HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP'
               enum:
-              - fileMount
-              - secret
+              - HTTP
+              - HTTPS
+              - GRPC
+              - HTTP2
+              - MONGO
+              - TCP
               type: string
+            tlsOptions:
+              description: 'Options: TLSSecret|TLSSecretRef|TLSSecretPath Supports
+                either creating the secret, referencing the secret, or explicitly
+                referencing the mount path in the pod.'
+              properties:
+                tlsSecret:
+                  description: 'TODO: Validation must be added to ensure multiple
+                    of these values are not set - TLSSecret|TLSSecretRef|TLSSecretPath
+                    otherwise there should be some form of heirachy presidence for
+                    which overrides other set values. Specifies TLS Cert/Key to be
+                    created'
+                  properties:
+                    cert:
+                      description: Secret map with each key which is base64 encoded
+                      format: byte
+                      type: string
+                    key:
+                      description: Secret map with each key which is base64 encoded
+                      format: byte
+                      type: string
+                  type: object
+                tlsSecretPath:
+                  description: Specifies TLS Cert/Key Path if not using SDS
+                  properties:
+                    certPath:
+                      description: Specifies the TLS Certificate Path in the running
+                        Pod
+                      type: string
+                    keyPath:
+                      description: Specifies the TLS Key Path in the running Pod
+                      type: string
+                  type: object
+                tlsSecretRef:
+                  description: Specifies the TLS Secret
+                  properties:
+                    secretName:
+                      type: string
+                  type: object
+              type: object
             trafficType:
               description: 'Options: "ingress" or "egress"'
               enum:
@@ -82,10 +111,9 @@ spec:
           - hosts
           - port
           - mode
+          - protocol
           - trafficType
-          - key
-          - cert
-          - secretType
+          - tlsOptions
           type: object
         status:
           type: object
