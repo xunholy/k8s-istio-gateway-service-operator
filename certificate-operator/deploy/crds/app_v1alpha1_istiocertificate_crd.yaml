@@ -69,7 +69,9 @@ spec:
                 tlsSecret:
                   description: 'TODO: Validation must be added to ensure multiple
                     of these values are not set - TLSSecret|TLSSecretRef|TLSSecretPath
-                    Specifies TLS Cert/Key to be created'
+                    otherwise there should be some form of heirachy presidence for
+                    which overrides other set values. Specifies TLS Cert/Key to be
+                    created'
                   properties:
                     cert:
                       description: Secret map with each key which is base64 encoded
@@ -97,10 +99,6 @@ spec:
                     secretName:
                       type: string
                   type: object
-              required:
-              - tlsSecret
-              - tlsSecretRef
-              - tlsSecretPath
               type: object
             trafficType:
               description: 'Options: "ingress" or "egress"'

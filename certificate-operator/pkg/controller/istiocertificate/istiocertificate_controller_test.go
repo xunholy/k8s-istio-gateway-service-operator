@@ -39,9 +39,11 @@ func TestIstioCertificateController(t *testing.T) {
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			TLSSecret: &appv1alpha1.TLSSecret{
-				Cert: []byte{1, 2},
-				Key:  []byte{1, 2},
+			TLSOptions: appv1alpha1.TLSOptions{
+				TLSSecret: &appv1alpha1.TLSSecret{
+					Cert: []byte{1, 2},
+					Key:  []byte{1, 2},
+				},
 			},
 		},
 	}
@@ -135,9 +137,11 @@ func TestIstioCertificateControllerReconciler_Simple(t *testing.T) {
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			TLSSecret: &appv1alpha1.TLSSecret{
-				Cert: []byte{1, 2},
-				Key:  []byte{1, 2},
+			TLSOptions: appv1alpha1.TLSOptions{
+				TLSSecret: &appv1alpha1.TLSSecret{
+					Cert: []byte{1, 2},
+					Key:  []byte{1, 2},
+				},
 			},
 		},
 	}
@@ -200,9 +204,11 @@ func TestIstioCertificateControllerReconciler_Simple_2(t *testing.T) {
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "egress",
-			TLSSecret: &appv1alpha1.TLSSecret{
-				Cert: []byte{1, 2},
-				Key:  []byte{1, 2},
+			TLSOptions: appv1alpha1.TLSOptions{
+				TLSSecret: &appv1alpha1.TLSSecret{
+					Cert: []byte{1, 2},
+					Key:  []byte{1, 2},
+				},
 			},
 		},
 	}
@@ -223,7 +229,7 @@ func TestIstioCertificateControllerReconciler_Simple_2(t *testing.T) {
 					Hosts: []string{"*"},
 					TLS: &networkv3.TLSOptions{
 						Mode:           networkv3.TLSModeSimple,
-						CredentialName: fmt.Sprintf("%s-%s-secret", namespace, name),
+						CredentialName: fmt.Sprintf("%s-%s-secret", name, namespace),
 					},
 				},
 			},
@@ -289,9 +295,11 @@ func TestIstioCertificateControllerReconciler_Passthrough(t *testing.T) {
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			TLSSecret: &appv1alpha1.TLSSecret{
-				Cert: []byte{1, 2},
-				Key:  []byte{1, 2},
+			TLSOptions: appv1alpha1.TLSOptions{
+				TLSSecret: &appv1alpha1.TLSSecret{
+					Cert: []byte{1, 2},
+					Key:  []byte{1, 2},
+				},
 			},
 		},
 	}
@@ -354,9 +362,11 @@ func TestIstioCertificateControllerReconciler_Passthrough_2(t *testing.T) {
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			TLSSecret: &appv1alpha1.TLSSecret{
-				Cert: []byte{1, 2},
-				Key:  []byte{1, 2},
+			TLSOptions: appv1alpha1.TLSOptions{
+				TLSSecret: &appv1alpha1.TLSSecret{
+					Cert: []byte{1, 2},
+					Key:  []byte{1, 2},
+				},
 			},
 		},
 	}

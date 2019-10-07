@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"fmt"
+	"strings"
 
 	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
 
@@ -41,7 +42,7 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 			// key, and the CA certificate (if using mutual TLS). Set the
 			// `ISTIO_META_USER_SDS` metadata variable in the gateway's proxy to
 			// enable the dynamic credential fetching feature.
-			CredentialName: fmt.Sprintf("%s-%s-secret", certificate.Namespace, certificate.Spec.Name),
+			CredentialName: fmt.Sprintf("%s-%s-secret", certificate.Spec.Name, certificate.Namespace),
 
 			// Optional: Indicates whether connections to this port should be
 			// secured using TLS. The value of this field determines how TLS is
@@ -49,7 +50,10 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 			Mode: certificate.Spec.Mode,
 		}
 		if certificate.Spec.TLSOptions.TLSSecretRef != nil {
-			// TODO: Document this block and its usecase
+			// If the secret has already been applied to the K8s cluster and the operator does not need to
+			// create the secret then a tlsSecretRef can be used which references the secret. There is an
+			// assumption the Gateway has access to the secret references and that it exists prior to being
+			// referenced.
 			secretRef = &networkv3.TLSOptions{
 				CredentialName: certificate.Spec.TLSOptions.TLSSecretRef.SecretName,
 				Mode:           certificate.Spec.Mode,
@@ -69,9 +73,6 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 				// holding the server's private key.
 				PrivateKey: certificate.Spec.TLSOptions.TLSSecretPath.KeyPath,
 
-				// Optional: Indicates whether connections to this port should be
-				// secured using TLS. The value of this field determines how TLS is
-				// enforced.
 				Mode: certificate.Spec.Mode,
 			}
 
@@ -81,7 +82,7 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 			// connections
 			Port: networkv3.Port{
 				// Label assigned to the port.
-				Name: fmt.Sprintf("%s-%s", certificate.Spec.Protocol, certificate.Spec.Name),
+				Name: fmt.Sprintf("%s-%s", strings.ToLower(string(certificate.Spec.Protocol)), certificate.Spec.Name),
 
 				// REQUIRED: A valid non-negative integer port number.
 				Number: certificate.Spec.Port,
@@ -122,6 +123,8 @@ func defaultServer() networkv3.Server {
 			Number:   80,
 			Protocol: "HTTP",
 		},
+		// TODO: Hosts should not be wildcard as this may impact other Gateway objects.
+		// Should consider some way to derrive a DNS or identifier to limit scope.
 		Hosts: []string{"*"},
 	}
 }

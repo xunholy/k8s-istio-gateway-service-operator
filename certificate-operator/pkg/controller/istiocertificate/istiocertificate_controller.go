@@ -142,8 +142,7 @@ func (r *ReconcileIstioCertificate) ReconcileGateway(request reconcile.Request, 
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType), Namespace: request.Namespace}, gatewayObj)
 	if err != nil {
 		if errors.IsNotFound(err) {
-			// Ingress and/or Egress Gateway object does not exist (Possibly Expected?)
-			// TODO: Should we requeue here?
+			// Ingress and/or Egress Gateway object does not exist.
 			return nil
 		}
 		return err
@@ -174,12 +173,12 @@ func (r *ReconcileIstioCertificate) ReconcileGateway(request reconcile.Request, 
 
 func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, certificate *appv1alpha1.IstioCertificate) error {
 	secretObj := &corev1.Secret{}
-	key := types.NamespacedName{Name: fmt.Sprintf("%s-%s-secret", request.Namespace, request.Name), Namespace: request.Namespace}
+	key := types.NamespacedName{Name: fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace), Namespace: request.Namespace}
 	err := r.client.Get(context.TODO(), key, secretObj)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			s := secret.SecretConfig{
-				Name:        fmt.Sprintf("%s-%s-secret", request.Namespace, request.Name),
+				Name:        fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
 				Namespace:   secretNamespace(certificate),
 				Labels:      map[string]string{"Namespace": request.Namespace},
 				Certificate: certificate,

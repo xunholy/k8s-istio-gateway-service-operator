@@ -43,14 +43,18 @@ type IstioCertificateSpec struct {
 
 type TLSOptions struct {
 	// TODO: Validation must be added to ensure multiple of these values are not set - TLSSecret|TLSSecretRef|TLSSecretPath
+	// otherwise there should be some form of heirachy presidence for which overrides other set values.
 	// Specifies TLS Cert/Key to be created
-	TLSSecret *TLSSecret `json:"tlsSecret"`
+	// +optional
+	TLSSecret *TLSSecret `json:"tlsSecret,omitempty"`
 
 	// Specifies the TLS Secret
-	TLSSecretRef *TLSSecretRef `json:"tlsSecretRef"`
+	// +optional
+	TLSSecretRef *TLSSecretRef `json:"tlsSecretRef,omitempty"`
 
 	// Specifies TLS Cert/Key Path if not using SDS
-	TLSSecretPath *TLSSecretPath `json:"tlsSecretPath"`
+	// +optional
+	TLSSecretPath *TLSSecretPath `json:"tlsSecretPath,omitempty"`
 }
 
 type TLSSecretRef struct {
