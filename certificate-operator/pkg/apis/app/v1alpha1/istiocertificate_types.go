@@ -11,10 +11,6 @@ import (
 // IstioCertificateSpec defines the desired state of IstioCertificate
 // +k8s:openapi-gen=true
 type IstioCertificateSpec struct {
-	// Unique name of resource
-	// +kubebuilder:validation:MinLength=1
-	Name string `json:"name"`
-
 	// List of Servers > map of list of hosts and port
 	// +kubebuilder:validation:UniqueItems=false
 	// +kubebuilder:validation:MinItems=1

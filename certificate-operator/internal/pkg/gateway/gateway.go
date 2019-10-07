@@ -42,7 +42,7 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 			// key, and the CA certificate (if using mutual TLS). Set the
 			// `ISTIO_META_USER_SDS` metadata variable in the gateway's proxy to
 			// enable the dynamic credential fetching feature.
-			CredentialName: fmt.Sprintf("%s-%s-secret", certificate.Spec.Name, certificate.Namespace),
+			CredentialName: fmt.Sprintf("%s-%s-secret", certificate.ObjectMeta.Name, certificate.ObjectMeta.Namespace),
 
 			// Optional: Indicates whether connections to this port should be
 			// secured using TLS. The value of this field determines how TLS is
@@ -82,7 +82,7 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 			// connections
 			Port: networkv3.Port{
 				// Label assigned to the port.
-				Name: fmt.Sprintf("%s-%s", strings.ToLower(string(certificate.Spec.Protocol)), certificate.Spec.Name),
+				Name: fmt.Sprintf("%s-%s", strings.ToLower(string(certificate.Spec.Protocol)), certificate.ObjectMeta.Name),
 
 				// REQUIRED: A valid non-negative integer port number.
 				Number: certificate.Spec.Port,

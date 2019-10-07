@@ -55,7 +55,6 @@ func TestGatewayReconcile_TLSSecret(t *testing.T) {
 					Namespace: namespace,
 				},
 				Spec: appv1alpha1.IstioCertificateSpec{
-					Name:        name,
 					Hosts:       []string{"*"},
 					Mode:        "PASSTHROUGH",
 					Port:        80,
@@ -111,7 +110,6 @@ func TestGatewayReconcile_TLSSecretPath(t *testing.T) {
 					Namespace: namespace,
 				},
 				Spec: appv1alpha1.IstioCertificateSpec{
-					Name:        name,
 					Hosts:       []string{"*"},
 					Mode:        "PASSTHROUGH",
 					Port:        80,
@@ -168,7 +166,6 @@ func TestGatewayReconcile_TLSSecretRef(t *testing.T) {
 					Namespace: namespace,
 				},
 				Spec: appv1alpha1.IstioCertificateSpec{
-					Name:        name,
 					Hosts:       []string{"*"},
 					Mode:        "PASSTHROUGH",
 					Port:        80,
