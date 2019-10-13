@@ -26,7 +26,7 @@ jobs:
           fi
 
       - name: Operator-SDK Build
-        uses: xUnholy/operator-sdk-action
+        uses: xunholy/operator-sdk-action@master
         with:
           image: k8s-istio-certificate-operator/operator
           tag: latest
