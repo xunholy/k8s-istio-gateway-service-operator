@@ -17,8 +17,8 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Get dependencies
+        working-directory: certificate-operator
         run: |
-          cd certificate-operator
           go get -v -t -d ./...
           if [ -f Gopkg.toml ]; then
               curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
@@ -26,9 +26,18 @@ jobs:
           fi
 
       - name: Build
-        run: |
-          cd certificate-operator
-          go build -v .
+        working-directory: certificate-operator
+        run: go build -v .
+
+      - name: Publish to Registry
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: k8s-operator/repository
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: docker.pkg.github.com
+          dockerfile: build/Dockerfile
+          workdir: certificate-operator
 
   test:
     name: Test
