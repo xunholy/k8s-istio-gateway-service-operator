@@ -48,6 +48,7 @@ jobs:
       - name: GolangCI-Lint Action
         working-directory: certificate-operator
         uses: actions-contrib/golangci-lint@v0.1.0
+        run: run
 
   test:
     name: Test
