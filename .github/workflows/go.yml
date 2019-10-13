@@ -35,12 +35,12 @@ jobs:
           ./operator-sdk-${RELEASE_VERSION}-x86_64-linux-gnu build k8s-istio-certificate-operator/operator:latest
 
       - name: Publish to Registry
-        uses: elgohr/Publish-Docker-Github-Action@master
+        uses: zenato/docker-action@master
         with:
-          name: k8s-istio-certificate-operator/operator:latest
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          registry: docker.pkg.github.com
+          repository: k8s-istio-certificate-operator/operator
+          tag: latest
 
   test:
     name: Test
