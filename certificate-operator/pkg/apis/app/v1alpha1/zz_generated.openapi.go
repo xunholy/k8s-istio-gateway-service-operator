@@ -66,13 +66,6 @@ func schema_pkg_apis_app_v1alpha1_IstioCertificateSpec(ref common.ReferenceCallb
 			SchemaProps: spec.SchemaProps{
 				Description: "IstioCertificateSpec defines the desired state of IstioCertificate",
 				Properties: map[string]spec.Schema{
-					"name": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Unique name of resource",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"hosts": {
 						SchemaProps: spec.SchemaProps{
 							Description: "List of Servers > map of list of hosts and port",
@@ -121,7 +114,7 @@ func schema_pkg_apis_app_v1alpha1_IstioCertificateSpec(ref common.ReferenceCallb
 						},
 					},
 				},
-				Required: []string{"name", "hosts", "port", "mode", "protocol", "trafficType", "tlsOptions"},
+				Required: []string{"hosts", "port", "mode", "protocol", "trafficType", "tlsOptions"},
 			},
 		},
 		Dependencies: []string{

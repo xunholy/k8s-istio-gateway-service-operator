@@ -143,13 +143,13 @@ func (in *TLSSecret) DeepCopyInto(out *TLSSecret) {
 	*out = *in
 	if in.Cert != nil {
 		in, out := &in.Cert, &out.Cert
-		*out = make([]byte, len(*in))
-		copy(*out, *in)
+		*out = new(string)
+		**out = **in
 	}
 	if in.Key != nil {
 		in, out := &in.Key, &out.Key
-		*out = make([]byte, len(*in))
-		copy(*out, *in)
+		*out = new(string)
+		**out = **in
 	}
 	return
 }

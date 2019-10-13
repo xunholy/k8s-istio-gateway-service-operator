@@ -60,11 +60,11 @@ type TLSSecretRef struct {
 type TLSSecret struct {
 	// Secret map with each key which is base64 encoded
 	// +kubebuilder:validation:UniqueItems=false
-	Cert []byte `json:"cert,omitempty"`
+	Cert *string `json:"cert,omitempty"`
 
 	// Secret map with each key which is base64 encoded
 	// +kubebuilder:validation:UniqueItems=false
-	Key []byte `json:"key,omitempty"`
+	Key *string `json:"key,omitempty"`
 }
 
 type TLSSecretPath struct {

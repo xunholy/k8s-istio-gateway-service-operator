@@ -25,42 +25,9 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 	// Add all certificate server entries into servers array
 	for _, certificate := range g.Certificates.Items {
 		// Secrets will be default to using Kubernetes secret objects leveraging SDS
-		secretRef := &networkv3.TLSOptions{
-			// The credentialName stands for a unique identifier that can be used
-			// to identify the serverCertificate and the privateKey. The
-			// credentialName appended with suffix "-cacert" is used to identify
-			// the CaCertificates associated with this server. Gateway workloads
-			// capable of fetching credentials from a remote credential store such
-			// as Kubernetes secrets, will be configured to retrieve the
-			// serverCertificate and the privateKey using credentialName, instead
-			// of using the file system paths specified above. If using mutual TLS,
-			// gateway workload instances will retrieve the CaCertificates using
-			// credentialName-cacert. The semantics of the name are platform
-			// dependent.  In Kubernetes, the default Istio supplied credential
-			// server expects the credentialName to match the name of the
-			// Kubernetes secret that holds the server certificate, the private
-			// key, and the CA certificate (if using mutual TLS). Set the
-			// `ISTIO_META_USER_SDS` metadata variable in the gateway's proxy to
-			// enable the dynamic credential fetching feature.
-			CredentialName: fmt.Sprintf("%s-%s-secret", certificate.ObjectMeta.Name, certificate.ObjectMeta.Namespace),
-
-			// Optional: Indicates whether connections to this port should be
-			// secured using TLS. The value of this field determines how TLS is
-			// enforced.
-			Mode: certificate.Spec.Mode,
-		}
-		if certificate.Spec.TLSOptions.TLSSecretRef != nil {
-			// If the secret has already been applied to the K8s cluster and the operator does not need to
-			// create the secret then a tlsSecretRef can be used which references the secret. There is an
-			// assumption the Gateway has access to the secret references and that it exists prior to being
-			// referenced.
-			secretRef = &networkv3.TLSOptions{
-				CredentialName: certificate.Spec.TLSOptions.TLSSecretRef.SecretName,
-				Mode:           certificate.Spec.Mode,
-			}
-		}
+		secretRef := &networkv3.TLSOptions{}
+		// TODO: Verify is TLSSecretPath is using Mode SIMPLE
 		if certificate.Spec.TLSOptions.TLSSecretPath != nil {
-
 			// TODO: This would require the Istio GW pod to be restarted to pickup secrets
 			// Restart pod using respective labels for ingres/egress and bounce pods based
 			// of a strategic percentage for optimization, perhaps include a grace period.
@@ -75,7 +42,45 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 
 				Mode: certificate.Spec.Mode,
 			}
+		}
+		// TODO: Verify is TLSSecretRef is using Mode SIMPLE
+		// The TLSSecretRef could reflect upon a secret in a unique namespace depending on PASSTHROUGH or SIMPLE
+		// Should both modes be supported, otherwise only SIMPLE will be supported by default.
+		if certificate.Spec.TLSOptions.TLSSecretRef != nil {
+			// If the secret has already been applied to the K8s cluster and the operator does not need to
+			// create the secret then a tlsSecretRef can be used which references the secret. There is an
+			// assumption the Gateway has access to the secret references and that it exists prior to being
+			// referenced.
+			secretRef = &networkv3.TLSOptions{
+				CredentialName: certificate.Spec.TLSOptions.TLSSecretRef.SecretName,
+				Mode:           certificate.Spec.Mode,
+			}
+		}
+		if certificate.Spec.TLSOptions.TLSSecret != nil {
+			secretRef = &networkv3.TLSOptions{
+				// The credentialName stands for a unique identifier that can be used
+				// to identify the serverCertificate and the privateKey. The
+				// credentialName appended with suffix "-cacert" is used to identify
+				// the CaCertificates associated with this server. Gateway workloads
+				// capable of fetching credentials from a remote credential store such
+				// as Kubernetes secrets, will be configured to retrieve the
+				// serverCertificate and the privateKey using credentialName, instead
+				// of using the file system paths specified above. If using mutual TLS,
+				// gateway workload instances will retrieve the CaCertificates using
+				// credentialName-cacert. The semantics of the name are platform
+				// dependent.  In Kubernetes, the default Istio supplied credential
+				// server expects the credentialName to match the name of the
+				// Kubernetes secret that holds the server certificate, the private
+				// key, and the CA certificate (if using mutual TLS). Set the
+				// `ISTIO_META_USER_SDS` metadata variable in the gateway's proxy to
+				// enable the dynamic credential fetching feature.
+				CredentialName: fmt.Sprintf("%s-%s-secret", certificate.ObjectMeta.Name, certificate.ObjectMeta.Namespace),
 
+				// Optional: Indicates whether connections to this port should be
+				// secured using TLS. The value of this field determines how TLS is
+				// enforced.
+				Mode: certificate.Spec.Mode,
+			}
 		}
 		servers = append(servers, networkv3.Server{
 			// REQUIRED: The Port on which the proxy should listen for incoming
