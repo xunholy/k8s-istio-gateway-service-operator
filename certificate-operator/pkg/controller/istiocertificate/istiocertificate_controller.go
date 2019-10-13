@@ -6,6 +6,7 @@ import (
 
 	gateway "github.com/xUnholy/k8s-operator/internal/pkg/gateway"
 	secret "github.com/xUnholy/k8s-operator/internal/pkg/secret"
+	"github.com/xUnholy/k8s-operator/internal/pkg/validate"
 
 	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
 	// istio "istio.io/api/networking/v1alpha3"
@@ -89,18 +90,22 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 	certificate, err := r.ReconcileCRD(request)
 	if err != nil {
 		logger.Error(err, "Failed to process CRD request. Requeue")
-		return reconcile.Result{}, err
+		return reconcile.Result{Requeue: true}, err
 	}
 	if certificate == nil {
 		return reconcile.Result{}, nil
 	}
 
 	if certificate.Spec.TLSOptions.TLSSecret != nil {
+		if certificate.Spec.TLSOptions.TLSSecret.Cert == nil || certificate.Spec.TLSOptions.TLSSecret.Key == nil {
+			logger.Error(err, "Failed to process secret request. Requeue")
+			return reconcile.Result{Requeue: true}, fmt.Errorf("cert and/or key cannot be nil")
+		}
 		logger.Info("Reconcile Secret object.", "certificate.Spec.Mode", certificate.Spec.Mode)
 		err = r.ReconcileSecret(request, certificate)
 		if err != nil {
 			logger.Error(err, "Failed to process secret request. Requeue")
-			return reconcile.Result{}, err
+			return reconcile.Result{Requeue: true}, err
 		}
 	}
 
@@ -108,7 +113,7 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 	err = r.ReconcileGateway(request, certificate, certificate.Spec.TrafficType)
 	if err != nil {
 		logger.Error(err, "Failed to process gateway request. Requeue")
-		return reconcile.Result{}, err
+		return reconcile.Result{Requeue: true}, err
 	}
 	return reconcile.Result{Requeue: true}, nil
 }
@@ -177,6 +182,10 @@ func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, c
 	err := r.client.Get(context.TODO(), key, secretObj)
 	if err != nil {
 		if errors.IsNotFound(err) {
+			err := validate.ValidateSecretEncoding(*certificate.Spec.TLSOptions.TLSSecret)
+			if err != nil {
+				return fmt.Errorf("cert and/or key are not base64 encoded")
+			}
 			s := secret.SecretConfig{
 				Name:        fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
 				Namespace:   secretNamespace(certificate),

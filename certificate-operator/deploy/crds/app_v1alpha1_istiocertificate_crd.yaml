@@ -42,10 +42,6 @@ spec:
               - PASSTHROUGH
               - MUTUAL
               type: string
-            name:
-              description: Unique name of resource
-              minLength: 1
-              type: string
             port:
               format: int64
               maximum: 65535
@@ -69,17 +65,15 @@ spec:
                 tlsSecret:
                   description: 'TODO: Validation must be added to ensure multiple
                     of these values are not set - TLSSecret|TLSSecretRef|TLSSecretPath
-                    otherwise there should be some form of heirachy presidence for
+                    otherwise there should be some form of hierarchy precedence for
                     which overrides other set values. Specifies TLS Cert/Key to be
                     created'
                   properties:
                     cert:
                       description: Secret map with each key which is base64 encoded
-                      format: byte
                       type: string
                     key:
                       description: Secret map with each key which is base64 encoded
-                      format: byte
                       type: string
                   type: object
                 tlsSecretPath:
@@ -107,7 +101,6 @@ spec:
               - egress
               type: string
           required:
-          - name
           - hosts
           - port
           - mode

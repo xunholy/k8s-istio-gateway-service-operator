@@ -29,8 +29,8 @@ func Reconcile(s SecretConfig) *corev1.Secret {
 		// base64 encoded string, representing the arbitrary (possibly non-string)
 		// data value here. Described in https://tools.ietf.org/html/rfc4648#section-4
 		Data: map[string][]byte{
-			"tls.key": s.Certificate.Spec.TLSOptions.TLSSecret.Key,
-			"tls.crt": s.Certificate.Spec.TLSOptions.TLSSecret.Cert,
+			"tls.key": []byte(*s.Certificate.Spec.TLSOptions.TLSSecret.Key),
+			"tls.crt": []byte(*s.Certificate.Spec.TLSOptions.TLSSecret.Cert),
 		},
 		// Used to facilitate programmatic handling of secret data.
 		Type: "kubernetes.io/tls",
