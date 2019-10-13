@@ -7,8 +7,6 @@ jobs:
       - uses: actions/checkout@master
       - name: Publish to Registry
         uses: elgohr/Publish-Docker-Github-Action@master
-        run: |
-          cd certificate-operator
         with:
           name: myDocker/repository
           username: ${{ secrets.DOCKER_USERNAME }}
