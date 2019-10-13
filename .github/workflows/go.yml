@@ -1,5 +1,5 @@
 name: Go
-on: [push]
+on: [push, pull_request]
 env:
   GO111MODULE: on
 jobs:
@@ -38,17 +38,6 @@ jobs:
           registry: docker.pkg.github.com
           dockerfile: build/Dockerfile
           workdir: certificate-operator
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v1
-
-      - name: GolangCI-Lint Action
-        working-directory: certificate-operator
-        uses: actions-contrib/golangci-lint@v0.1.0
-        run: run
 
   test:
     name: Test
