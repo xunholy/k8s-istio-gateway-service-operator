@@ -26,7 +26,9 @@ jobs:
           fi
 
       - name: Build
-        run: go build -v .
+        run: |
+          cd certificate-operator
+          go build -v .
 
   test:
     name: Test
@@ -52,4 +54,5 @@ jobs:
 
       - name: Test
         run: |
+          cd certificate-operator
           go test -v ./... -cover
