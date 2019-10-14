@@ -24,7 +24,7 @@ jobs:
         uses: xunholy/operator-sdk-github-action@master
         id: operator-sdk
         with:
-          image: k8s-istio-certificate-operator/operator
+          image: docker.pkg.github.com/xunholy/k8s-istio-certificate-operator/operator
           tag: latest
           dirPath: ./certificate-operator
 
