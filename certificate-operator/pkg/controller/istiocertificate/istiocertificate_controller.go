@@ -91,9 +91,9 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 	certificate, err := r.ReconcileCRD(request)
 	if err != nil {
 		logger.Error(err, "Failed to process CRD request. Requeue")
-		err = r.ReconcileCRDStatus(request, certificate, err)
-		if err != nil {
-			logger.Error(err, "Failed to update CRD status. Requeue")
+		statusErr := r.ReconcileCRDStatus(request, certificate, err)
+		if statusErr != nil {
+			logger.Error(statusErr, "Failed to update CRD status. Requeue")
 		}
 		return reconcile.Result{Requeue: true}, err
 	}
@@ -105,9 +105,9 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 	err = r.ReconcileSecret(request, certificate)
 	if err != nil {
 		logger.Error(err, "Failed to process secret request. Requeue")
-		err = r.ReconcileCRDStatus(request, certificate, err)
-		if err != nil {
-			logger.Error(err, "Failed to update CRD status. Requeue")
+		statusErr := r.ReconcileCRDStatus(request, certificate, err)
+		if statusErr != nil {
+			logger.Error(statusErr, "Failed to update CRD status. Requeue")
 		}
 		return reconcile.Result{Requeue: true}, err
 	}
@@ -116,9 +116,9 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 	err = r.ReconcileGateway(request, certificate, certificate.Spec.TrafficType)
 	if err != nil {
 		logger.Error(err, "Failed to process gateway request. Requeue")
-		err = r.ReconcileCRDStatus(request, certificate, err)
-		if err != nil {
-			logger.Error(err, "Failed to update CRD status. Requeue")
+		statusErr := r.ReconcileCRDStatus(request, certificate, err)
+		if statusErr != nil {
+			logger.Error(statusErr, "Failed to update CRD status. Requeue")
 		}
 		return reconcile.Result{Requeue: true}, err
 	}
@@ -133,9 +133,12 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 func (r *ReconcileIstioCertificate) ReconcileCRDStatus(request reconcile.Request, certificate *appv1alpha1.IstioCertificate, err error) error {
 	s := status.StatusConfig{
 		Success:         err == nil,
-		ErrorMessage:    err.Error(),
+		ErrorMessage:    "No error found",
 		SecretName:      fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
 		SecretNamespace: secretNamespace(certificate),
+	}
+	if err != nil {
+		s.ErrorMessage = err.Error()
 	}
 	certificate.Status = *status.Reconcile(s)
 	return r.client.Update(context.TODO(), certificate)
