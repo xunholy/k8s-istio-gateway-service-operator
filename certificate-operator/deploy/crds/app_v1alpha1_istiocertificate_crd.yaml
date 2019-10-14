@@ -109,6 +109,38 @@ spec:
           - tlsOptions
           type: object
         status:
+          properties:
+            condition:
+              description: 'INSERT ADDITIONAL STATUS FIELD - define observed state
+                of cluster Important: Run "operator-sdk generate k8s" to regenerate
+                code after modifying this file Add custom validation using kubebuilder
+                tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html'
+              properties:
+                createdSecretDetails:
+                  description: If TLSSecret has been specificed in the Spec a secret
+                    will be created otherwise this field is omit.
+                  properties:
+                    secretName:
+                      description: Secret name that was created due to TLSSecret being
+                        supplied in Spec.
+                      type: string
+                    secretNamespace:
+                      description: Namespace in which the secret was created - this
+                        may vary depending on Mode. EG. SIMPLE will result in a secret
+                        created in istio-system. However, PASSTHROUGH will result
+                        in a secret created in the namespace the CRD is applied.
+                      type: string
+                  type: object
+                message:
+                  description: Depending on whether success is false the message will
+                    contain the error or cause of failure. However, if success is
+                    true the message will simple return a default success message.
+                  type: string
+                status:
+                  description: If the CRD was reconciled correctly without error success
+                    will result in true.
+                  type: boolean
+              type: object
           type: object
   version: v1alpha1
   versions:

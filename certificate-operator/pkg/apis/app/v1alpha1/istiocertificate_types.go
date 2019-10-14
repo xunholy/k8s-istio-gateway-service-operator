@@ -5,6 +5,7 @@ import (
 
 	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
 	// networkv3 "istio.io/api/networking/v1alpha3"
+
 	networkv3 "knative.dev/pkg/apis/istio/v1alpha3"
 )
 
@@ -70,6 +71,7 @@ type TLSSecret struct {
 type TLSSecretPath struct {
 	// Specifies the TLS Certificate Path in the running Pod
 	CertPath string `json:"certPath,omitempty"`
+
 	// Specifies the TLS Key Path in the running Pod
 	KeyPath string `json:"keyPath,omitempty"`
 }
@@ -80,6 +82,29 @@ type IstioCertificateStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
+	Condition Condition `json:"condition,omitempty"`
+}
+
+type Condition struct {
+	// If the CRD was reconciled correctly without error success will result in true.
+	Success bool `json:"status,omitempty"`
+
+	// Depending on whether success is false the message will contain the error or cause of failure.
+	// However, if success is true the message will simple return a default success message.
+	ErrorMessage error `json:"message,omitempty"`
+
+	// If TLSSecret has been specificed in the Spec a secret will be created otherwise this field is omit.
+	CreatedSecretDetails CreatedSecretDetails `json:"createdSecretDetails,omitempty"`
+}
+
+type CreatedSecretDetails struct {
+	// Secret name that was created due to TLSSecret being supplied in Spec.
+	SecretName string `json:"secretName,omitempty"`
+
+	// Namespace in which the secret was created - this may vary depending on Mode.
+	// EG. SIMPLE will result in a secret created in istio-system.
+	// However, PASSTHROUGH will result in a secret created in the namespace the CRD is applied.
+	SecretNamespace string `json:"secretNamespace,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

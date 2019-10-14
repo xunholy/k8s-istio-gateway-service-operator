@@ -127,9 +127,17 @@ func schema_pkg_apis_app_v1alpha1_IstioCertificateStatus(ref common.ReferenceCal
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "IstioCertificateStatus defines the observed state of IstioCertificate",
-				Properties:  map[string]spec.Schema{},
+				Properties: map[string]spec.Schema{
+					"condition": {
+						SchemaProps: spec.SchemaProps{
+							Description: "INSERT ADDITIONAL STATUS FIELD - define observed state of cluster Important: Run \"operator-sdk generate k8s\" to regenerate code after modifying this file Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html",
+							Ref:         ref("./pkg/apis/app/v1alpha1.Condition"),
+						},
+					},
+				},
 			},
 		},
-		Dependencies: []string{},
+		Dependencies: []string{
+			"./pkg/apis/app/v1alpha1.Condition"},
 	}
 }

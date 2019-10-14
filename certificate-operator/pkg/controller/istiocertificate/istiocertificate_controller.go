@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	gateway "github.com/xUnholy/k8s-operator/internal/pkg/gateway"
-	secret "github.com/xUnholy/k8s-operator/internal/pkg/secret"
+	"github.com/xUnholy/k8s-operator/internal/pkg/gateway"
+	"github.com/xUnholy/k8s-operator/internal/pkg/secret"
+	"github.com/xUnholy/k8s-operator/internal/pkg/status"
 	"github.com/xUnholy/k8s-operator/internal/pkg/validate"
 
 	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
@@ -90,6 +91,10 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 	certificate, err := r.ReconcileCRD(request)
 	if err != nil {
 		logger.Error(err, "Failed to process CRD request. Requeue")
+		err = r.ReconcileCRDStatus(request, certificate, err)
+		if err != nil {
+			logger.Error(err, "Failed to update CRD status. Requeue")
+		}
 		return reconcile.Result{Requeue: true}, err
 	}
 	if certificate == nil {
@@ -99,12 +104,20 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 	if certificate.Spec.TLSOptions.TLSSecret != nil {
 		if certificate.Spec.TLSOptions.TLSSecret.Cert == nil || certificate.Spec.TLSOptions.TLSSecret.Key == nil {
 			logger.Error(err, "Failed to process secret request. Requeue")
+			err = r.ReconcileCRDStatus(request, certificate, err)
+			if err != nil {
+				logger.Error(err, "Failed to update CRD status. Requeue")
+			}
 			return reconcile.Result{Requeue: true}, fmt.Errorf("cert and/or key cannot be nil")
 		}
 		logger.Info("Reconcile Secret object.", "certificate.Spec.Mode", certificate.Spec.Mode)
 		err = r.ReconcileSecret(request, certificate)
 		if err != nil {
 			logger.Error(err, "Failed to process secret request. Requeue")
+			err = r.ReconcileCRDStatus(request, certificate, err)
+			if err != nil {
+				logger.Error(err, "Failed to update CRD status. Requeue")
+			}
 			return reconcile.Result{Requeue: true}, err
 		}
 	}
@@ -113,9 +126,28 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 	err = r.ReconcileGateway(request, certificate, certificate.Spec.TrafficType)
 	if err != nil {
 		logger.Error(err, "Failed to process gateway request. Requeue")
+		err = r.ReconcileCRDStatus(request, certificate, err)
+		if err != nil {
+			logger.Error(err, "Failed to update CRD status. Requeue")
+		}
 		return reconcile.Result{Requeue: true}, err
 	}
+	err = r.ReconcileCRDStatus(request, certificate, nil)
+	if err != nil {
+		logger.Error(err, "Failed to update CRD status after completion. Requeue")
+	}
 	return reconcile.Result{Requeue: true}, nil
+}
+
+func (r *ReconcileIstioCertificate) ReconcileCRDStatus(request reconcile.Request, certificate *appv1alpha1.IstioCertificate, err error) error {
+	s := status.StatusConfig{
+		Success:         err == nil,
+		ErrorMessage:    err,
+		SecretName:      fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
+		SecretNamespace: secretNamespace(certificate),
+	}
+	certificate.Status = *status.Reconcile(s)
+	return r.client.Update(context.TODO(), certificate)
 }
 
 func (r *ReconcileIstioCertificate) ReconcileCRD(request reconcile.Request) (*appv1alpha1.IstioCertificate, error) {
