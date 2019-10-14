@@ -131,12 +131,12 @@ spec:
                         in a secret created in the namespace the CRD is applied.
                       type: string
                   type: object
-                message:
+                errorMessage:
                   description: Depending on whether success is false the message will
                     contain the error or cause of failure. However, if success is
                     true the message will simple return a default success message.
                   type: string
-                status:
+                success:
                   description: If the CRD was reconciled correctly without error success
                     will result in true.
                   type: boolean

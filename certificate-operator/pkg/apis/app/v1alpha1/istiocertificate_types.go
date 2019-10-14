@@ -87,11 +87,11 @@ type IstioCertificateStatus struct {
 
 type Condition struct {
 	// If the CRD was reconciled correctly without error success will result in true.
-	Success bool `json:"status,omitempty"`
+	Success bool `json:"success,omitempty"`
 
 	// Depending on whether success is false the message will contain the error or cause of failure.
 	// However, if success is true the message will simple return a default success message.
-	ErrorMessage error `json:"message,omitempty"`
+	ErrorMessage string `json:"errorMessage,omitempty"`
 
 	// If TLSSecret has been specificed in the Spec a secret will be created otherwise this field is omit.
 	CreatedSecretDetails CreatedSecretDetails `json:"createdSecretDetails,omitempty"`

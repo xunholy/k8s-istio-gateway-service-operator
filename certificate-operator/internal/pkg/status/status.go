@@ -6,7 +6,7 @@ import (
 
 type StatusConfig struct {
 	Success         bool
-	ErrorMessage    error
+	ErrorMessage    string
 	SecretName      string
 	SecretNamespace string
 }
