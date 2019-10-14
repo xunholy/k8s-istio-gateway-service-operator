@@ -31,7 +31,7 @@ jobs:
       - name: Publish to Registry
         run: |
           docker login docker.pkg.github.com -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker push "docker.pkg.github.com/xUnholy/${{steps.operator-sdk.outputs.image}}"
+          docker push "docker.pkg.github.com/xunholy/${{steps.operator-sdk.outputs.image}}"
 
   test:
     name: Test
