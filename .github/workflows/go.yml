@@ -1,31 +1,56 @@
 name: Go
 on: [push]
+env:
+  GO111MODULE: on
 jobs:
-
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
+      - name: Set up Go 1.12
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.12
+        id: go
 
-    - name: Set up Go 1.12
-      uses: actions/setup-go@v1
-      with:
-        go-version: 1.12
-      id: go
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v1
+      - name: Operator-SDK Build
+        uses: xunholy/operator-sdk-github-action@master
+        id: operator-sdk
+        with:
+          image: docker.pkg.github.com/xunholy/k8s-istio-certificate-operator/operator
+          tag: latest
+          dirPath: ./certificate-operator
 
-    - name: Get dependencies
-      run: |
-        go get -v -t -d ./...
-        if [ -f Gopkg.toml ]; then
-            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-            dep ensure
-        fi
-        
-    - name: Test
-      run: go test -v ./... -cover
+      - name: Publish to Registry
+        run: |
+          docker login docker.pkg.github.com -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker push "${{steps.operator-sdk.outputs.image}}"
 
-    - name: Build
-      run: go build -v .
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go 1.12
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.12
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+
+      - name: Get dependencies
+        working-directory: certificate-operator
+        run: |
+          go get -v -t -d ./...
+          if [ -f Gopkg.toml ]; then
+              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+              dep ensure
+          fi
+
+      - name: Test
+        working-directory: certificate-operator
+        run: go test -v ./... -cover

@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	gateway "github.com/xUnholy/k8s-operator/internal/pkg/gateway"
-	secret "github.com/xUnholy/k8s-operator/internal/pkg/secret"
+	"github.com/xUnholy/k8s-operator/internal/pkg/gateway"
+	"github.com/xUnholy/k8s-operator/internal/pkg/secret"
+	"github.com/xUnholy/k8s-operator/internal/pkg/status"
 	"github.com/xUnholy/k8s-operator/internal/pkg/validate"
 
 	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
@@ -90,32 +91,57 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 	certificate, err := r.ReconcileCRD(request)
 	if err != nil {
 		logger.Error(err, "Failed to process CRD request. Requeue")
+		statusErr := r.ReconcileCRDStatus(request, certificate, err)
+		if statusErr != nil {
+			logger.Error(statusErr, "Failed to update CRD status. Requeue")
+		}
 		return reconcile.Result{Requeue: true}, err
 	}
 	if certificate == nil {
 		return reconcile.Result{}, nil
 	}
 
-	if certificate.Spec.TLSOptions.TLSSecret != nil {
-		if certificate.Spec.TLSOptions.TLSSecret.Cert == nil || certificate.Spec.TLSOptions.TLSSecret.Key == nil {
-			logger.Error(err, "Failed to process secret request. Requeue")
-			return reconcile.Result{Requeue: true}, fmt.Errorf("cert and/or key cannot be nil")
+	logger.Info("Reconcile Secret object.", "certificate.Spec.Mode", certificate.Spec.Mode)
+	err = r.ReconcileSecret(request, certificate)
+	if err != nil {
+		logger.Error(err, "Failed to process secret request. Requeue")
+		statusErr := r.ReconcileCRDStatus(request, certificate, err)
+		if statusErr != nil {
+			logger.Error(statusErr, "Failed to update CRD status. Requeue")
 		}
-		logger.Info("Reconcile Secret object.", "certificate.Spec.Mode", certificate.Spec.Mode)
-		err = r.ReconcileSecret(request, certificate)
-		if err != nil {
-			logger.Error(err, "Failed to process secret request. Requeue")
-			return reconcile.Result{Requeue: true}, err
-		}
+		return reconcile.Result{Requeue: true}, err
 	}
 
 	logger.Info("Reconcile Gateway object.", "certificate.Spec.TrafficType", certificate.Spec.TrafficType)
 	err = r.ReconcileGateway(request, certificate, certificate.Spec.TrafficType)
 	if err != nil {
 		logger.Error(err, "Failed to process gateway request. Requeue")
+		statusErr := r.ReconcileCRDStatus(request, certificate, err)
+		if statusErr != nil {
+			logger.Error(statusErr, "Failed to update CRD status. Requeue")
+		}
 		return reconcile.Result{Requeue: true}, err
 	}
+
+	err = r.ReconcileCRDStatus(request, certificate, nil)
+	if err != nil {
+		logger.Error(err, "Failed to update CRD status after completion. Requeue")
+	}
 	return reconcile.Result{Requeue: true}, nil
+}
+
+func (r *ReconcileIstioCertificate) ReconcileCRDStatus(request reconcile.Request, certificate *appv1alpha1.IstioCertificate, err error) error {
+	s := status.StatusConfig{
+		Success:         err == nil,
+		ErrorMessage:    "No error found",
+		SecretName:      fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
+		SecretNamespace: secretNamespace(certificate),
+	}
+	if err != nil {
+		s.ErrorMessage = err.Error()
+	}
+	certificate.Status = *status.Reconcile(s)
+	return r.client.Update(context.TODO(), certificate)
 }
 
 func (r *ReconcileIstioCertificate) ReconcileCRD(request reconcile.Request) (*appv1alpha1.IstioCertificate, error) {
@@ -177,36 +203,41 @@ func (r *ReconcileIstioCertificate) ReconcileGateway(request reconcile.Request, 
 }
 
 func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, certificate *appv1alpha1.IstioCertificate) error {
-	secretObj := &corev1.Secret{}
-	key := types.NamespacedName{Name: fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace), Namespace: request.Namespace}
-	err := r.client.Get(context.TODO(), key, secretObj)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			err := validate.ValidateSecretEncoding(*certificate.Spec.TLSOptions.TLSSecret)
-			if err != nil {
-				return fmt.Errorf("cert and/or key are not base64 encoded")
-			}
-			s := secret.SecretConfig{
-				Name:        fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
-				Namespace:   secretNamespace(certificate),
-				Labels:      map[string]string{"Namespace": request.Namespace},
-				Certificate: certificate,
-			}
-			reconciledSecretObj := secret.Reconcile(s)
-
-			// SetControllerReference sets owner as a Controller OwnerReference on owned.
-			// This is used for garbage collection of the owned object and for
-			// reconciling the owner object on changes to owned (with a Watch + EnqueueRequestForOwner).
-			// Since only one OwnerReference can be a controller, it returns an error if
-			// there is another OwnerReference with Controller flag set.
-			err = controllerutil.SetControllerReference(certificate, reconciledSecretObj, r.scheme)
-			if err != nil {
-				return err
-			}
-
-			return r.client.Create(context.TODO(), reconciledSecretObj)
+	if certificate.Spec.TLSOptions.TLSSecret != nil {
+		if certificate.Spec.TLSOptions.TLSSecret.Cert == nil || certificate.Spec.TLSOptions.TLSSecret.Key == nil {
+			return fmt.Errorf("cert and/or key cannot be nil")
 		}
-		return err
+		secretObj := &corev1.Secret{}
+		key := types.NamespacedName{Name: fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace), Namespace: request.Namespace}
+		err := r.client.Get(context.TODO(), key, secretObj)
+		if err != nil {
+			if errors.IsNotFound(err) {
+				err := validate.ValidateSecretEncoding(*certificate.Spec.TLSOptions.TLSSecret)
+				if err != nil {
+					return fmt.Errorf("cert and/or key are not base64 encoded")
+				}
+				s := secret.SecretConfig{
+					Name:        fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
+					Namespace:   secretNamespace(certificate),
+					Labels:      map[string]string{"Namespace": request.Namespace},
+					Certificate: certificate,
+				}
+				reconciledSecretObj := secret.Reconcile(s)
+
+				// SetControllerReference sets owner as a Controller OwnerReference on owned.
+				// This is used for garbage collection of the owned object and for
+				// reconciling the owner object on changes to owned (with a Watch + EnqueueRequestForOwner).
+				// Since only one OwnerReference can be a controller, it returns an error if
+				// there is another OwnerReference with Controller flag set.
+				err = controllerutil.SetControllerReference(certificate, reconciledSecretObj, r.scheme)
+				if err != nil {
+					return err
+				}
+
+				return r.client.Create(context.TODO(), reconciledSecretObj)
+			}
+			return err
+		}
 	}
 	return nil
 }
