@@ -1,3 +1,8 @@
+![Build](https://github.com/xUnholy/k8s-istio-certificate-operator/workflows/Build%20And%20Push/badge.svg)
+![Test](https://github.com/xUnholy/k8s-istio-certificate-operator/workflows/Unit%20Test/badge.svg)
+
+
+
 # Certificate Operator
 
 This project creates a custom Kubertenes controller to process IstioCertificate resourcee - Making certificate management in Kubernetes with Istio easy.
