@@ -101,6 +101,16 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 		return reconcile.Result{}, nil
 	}
 
+	err = secret.ValidateTLSOptionExists(certificate)
+	if err != nil {
+		logger.Error(err, "Failed to process TLSOption request. Requeue")
+		statusErr := r.ReconcileCRDStatus(request, certificate, err)
+		if statusErr != nil {
+			logger.Error(statusErr, "Failed to update CRD status. Requeue")
+		}
+		return reconcile.Result{Requeue: true}, err
+	}
+
 	logger.Info("Reconcile Secret object.", "certificate.Spec.Mode", certificate.Spec.Mode)
 	err = r.ReconcileSecret(request, certificate)
 	if err != nil {
@@ -233,7 +243,6 @@ func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, c
 				if err != nil {
 					return err
 				}
-
 				return r.client.Create(context.TODO(), reconciledSecretObj)
 			}
 			return err

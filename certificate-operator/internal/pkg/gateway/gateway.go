@@ -21,9 +21,9 @@ type GatewayConfig struct {
 func Reconcile(g GatewayConfig) *networkv3.Gateway {
 	// Create empty server stanza array
 	servers := []networkv3.Server{}
-
 	// Add all certificate server entries into servers array
 	for _, certificate := range g.Certificates.Items {
+
 		// Secrets will be default to using Kubernetes secret objects leveraging SDS
 		secretRef := &networkv3.TLSOptions{}
 		// TODO: Verify is TLSSecretPath is using Mode SIMPLE

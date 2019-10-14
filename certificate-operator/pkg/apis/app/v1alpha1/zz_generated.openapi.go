@@ -114,7 +114,7 @@ func schema_pkg_apis_app_v1alpha1_IstioCertificateSpec(ref common.ReferenceCallb
 						},
 					},
 				},
-				Required: []string{"hosts", "port", "mode", "protocol", "trafficType", "tlsOptions"},
+				Required: []string{"hosts", "port", "mode", "protocol", "trafficType"},
 			},
 		},
 		Dependencies: []string{
