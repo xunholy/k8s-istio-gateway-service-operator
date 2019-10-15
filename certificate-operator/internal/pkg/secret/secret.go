@@ -1,8 +1,6 @@
 package secret
 
 import (
-	"fmt"
-
 	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,11 +35,4 @@ func Reconcile(s SecretConfig) *corev1.Secret {
 		// Used to facilitate programmatic handling of secret data.
 		Type: "kubernetes.io/tls",
 	}
-}
-
-func ValidateTLSOptionExists(certificate *appv1alpha1.IstioCertificate) error {
-	if certificate.Spec.TLSOptions != nil {
-		return nil
-	}
-	return fmt.Errorf("TLSOption cannot be empty")
 }
