@@ -21,7 +21,7 @@ var (
 func TestSecretReconcile(t *testing.T) {
 	certificate := &appv1alpha1.IstioCertificate{
 		Spec: appv1alpha1.IstioCertificateSpec{
-			TLSOptions: appv1alpha1.TLSOptions{
+			TLSOptions: &appv1alpha1.TLSOptions{
 				TLSSecret: &appv1alpha1.TLSSecret{
 					Cert: &cert,
 					Key:  &key,

@@ -35,7 +35,8 @@ type IstioCertificateSpec struct {
 
 	// Options: TLSSecret|TLSSecretRef|TLSSecretPath
 	// Supports either creating the secret, referencing the secret, or explicitly referencing the mount path in the pod.
-	TLSOptions TLSOptions `json:"tlsOptions"`
+	// +optional
+	TLSOptions *TLSOptions `json:"tlsOptions,omitempty"`
 }
 
 type TLSOptions struct {

@@ -110,7 +110,11 @@ func (in *IstioCertificateSpec) DeepCopyInto(out *IstioCertificateSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	in.TLSOptions.DeepCopyInto(&out.TLSOptions)
+	if in.TLSOptions != nil {
+		in, out := &in.TLSOptions, &out.TLSOptions
+		*out = new(TLSOptions)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

@@ -101,6 +101,16 @@ func (r *ReconcileIstioCertificate) Reconcile(request reconcile.Request) (reconc
 		return reconcile.Result{}, nil
 	}
 
+	err = r.validation(request, certificate)
+	if err != nil {
+		logger.Error(err, "Failed to process TLSSecretRef request. Requeue")
+		statusErr := r.ReconcileCRDStatus(request, certificate, err)
+		if statusErr != nil {
+			logger.Error(statusErr, "Failed to update CRD status. Requeue")
+		}
+		return reconcile.Result{Requeue: true}, err
+	}
+
 	logger.Info("Reconcile Secret object.", "certificate.Spec.Mode", certificate.Spec.Mode)
 	err = r.ReconcileSecret(request, certificate)
 	if err != nil {
@@ -233,8 +243,25 @@ func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, c
 				if err != nil {
 					return err
 				}
-
 				return r.client.Create(context.TODO(), reconciledSecretObj)
+			}
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *ReconcileIstioCertificate) validation(request reconcile.Request, certificate *appv1alpha1.IstioCertificate) error {
+	err := validate.TLSOptionExists(certificate)
+	if err != nil {
+		return err
+	}
+	if certificate.Spec.TLSOptions.TLSSecretRef != nil {
+		secret := &corev1.Secret{}
+		err := r.client.Get(context.TODO(), types.NamespacedName{Name: certificate.Spec.TLSOptions.TLSSecretRef.SecretName, Namespace: secretNamespace(certificate)}, secret)
+		if err != nil {
+			if errors.IsNotFound(err) {
+				return fmt.Errorf("reference to secret %v in namespace %v does not exist", secret, secretNamespace(certificate))
 			}
 			return err
 		}

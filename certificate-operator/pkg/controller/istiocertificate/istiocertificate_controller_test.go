@@ -41,7 +41,7 @@ func TestIstioCertificateController(t *testing.T) {
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			TLSOptions: appv1alpha1.TLSOptions{
+			TLSOptions: &appv1alpha1.TLSOptions{
 				TLSSecret: &appv1alpha1.TLSSecret{
 					Cert: &cert,
 					Key:  &key,
@@ -75,6 +75,108 @@ func TestIstioCertificateController(t *testing.T) {
 		if err != nil {
 			t.Fatalf("list certificates: (%v)", err)
 		}
+	}
+}
+
+func TestTLSSecretRefInvalidSecret(t *testing.T) {
+	// A TestIstioCertificate resource with metadata and spec.
+	certificate := &appv1alpha1.IstioCertificate{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: appv1alpha1.IstioCertificateSpec{
+			Hosts:       []string{"*"},
+			Mode:        "PASSTHROUGH",
+			Port:        80,
+			Protocol:    "HTTPS",
+			TrafficType: "ingress",
+			TLSOptions: &appv1alpha1.TLSOptions{
+				TLSSecretRef: &appv1alpha1.TLSSecretRef{
+					SecretName: fmt.Sprintf("%s-secret", name),
+				},
+			},
+		},
+	}
+	gateway := &networkv3.Gateway{}
+
+	// Objects to track in the fake client.
+	objs := []runtime.Object{certificate}
+
+	// Register operator types with the runtime scheme.
+	s := scheme.Scheme
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate)
+
+	// Create a fake client to mock API calls.
+	cl := fake.NewFakeClient(objs...)
+
+	// Create a ReconcileMemcached object with the scheme and fake client.
+	r := &ReconcileIstioCertificate{client: cl, scheme: s}
+
+	// Mock request to simulate Reconcile() being called on an event for a
+	// watched resource.
+	req := reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+	res, err := r.Reconcile(req)
+	if err == nil {
+		t.Fatalf("Expected failure due to TLSSecretRef not found (%v)", err)
+	}
+	// Check the result of reconciliation to make sure it has the desired state.
+	if !res.Requeue {
+		t.Error("reconcile did not requeue request as expected")
+	}
+}
+
+func TestNoTLSOption(t *testing.T) {
+	// A TestIstioCertificate resource with metadata and spec.
+	certificate := &appv1alpha1.IstioCertificate{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: appv1alpha1.IstioCertificateSpec{
+			Hosts:       []string{"*"},
+			Mode:        "PASSTHROUGH",
+			Port:        80,
+			Protocol:    "HTTPS",
+			TrafficType: "ingress",
+		},
+	}
+
+	gateway := &networkv3.Gateway{}
+
+	// Objects to track in the fake client.
+	objs := []runtime.Object{certificate}
+
+	// Register operator types with the runtime scheme.
+	s := scheme.Scheme
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate)
+
+	// Create a fake client to mock API calls.
+	cl := fake.NewFakeClient(objs...)
+
+	// Create a ReconcileMemcached object with the scheme and fake client.
+	r := &ReconcileIstioCertificate{client: cl, scheme: s}
+
+	// Mock request to simulate Reconcile() being called on an event for a
+	// watched resource.
+	req := reconcile.Request{
+		NamespacedName: types.NamespacedName{
+			Name:      name,
+			Namespace: namespace,
+		},
+	}
+	res, err := r.Reconcile(req)
+	if err == nil {
+		t.Fatalf("Expected failure due to TLSOption not found (%v)", err)
+	}
+	// Check the result of reconciliation to make sure it has the desired state.
+	if !res.Requeue {
+		t.Error("reconcile did not requeue request as expected")
 	}
 }
 
@@ -128,7 +230,7 @@ func TestCertAndKey(t *testing.T) {
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			TLSOptions: appv1alpha1.TLSOptions{
+			TLSOptions: &appv1alpha1.TLSOptions{
 				TLSSecret: &appv1alpha1.TLSSecret{
 					Cert: &cert,
 					Key:  &key,
@@ -189,7 +291,7 @@ func TestCertAndNoKey(t *testing.T) {
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			TLSOptions: appv1alpha1.TLSOptions{
+			TLSOptions: &appv1alpha1.TLSOptions{
 				TLSSecret: &appv1alpha1.TLSSecret{
 					Cert: &cert,
 				},
@@ -249,7 +351,7 @@ func TestNoCertAndKey(t *testing.T) {
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			TLSOptions: appv1alpha1.TLSOptions{
+			TLSOptions: &appv1alpha1.TLSOptions{
 				TLSSecret: &appv1alpha1.TLSSecret{
 					Key: &key,
 				},
@@ -309,7 +411,7 @@ func TestNoCertAndNoKey(t *testing.T) {
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			TLSOptions: appv1alpha1.TLSOptions{
+			TLSOptions: &appv1alpha1.TLSOptions{
 				TLSSecret: &appv1alpha1.TLSSecret{},
 			},
 		},
@@ -367,7 +469,7 @@ func TestCertAndKeyWithSecretRef(t *testing.T) {
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			TLSOptions: appv1alpha1.TLSOptions{
+			TLSOptions: &appv1alpha1.TLSOptions{
 				TLSSecret: &appv1alpha1.TLSSecret{
 					Cert: &cert,
 					Key:  &key,
@@ -427,8 +529,8 @@ func TestCertAndKeyWithSecretRef(t *testing.T) {
 		},
 	}
 	res, err := r.Reconcile(req)
-	if err != nil {
-		t.Fatalf("reconcile: (%v)", err)
+	if err == nil {
+		t.Fatalf("Expected failure due to TLSSecretRef not found (%v)", err)
 	}
 	// Check the result of reconciliation to make sure it has the desired state.
 	if !res.Requeue {
@@ -457,7 +559,7 @@ func TestIncorrectCertAndKeyEncoding(t *testing.T) {
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			TLSOptions: appv1alpha1.TLSOptions{
+			TLSOptions: &appv1alpha1.TLSOptions{
 				TLSSecret: &appv1alpha1.TLSSecret{
 					Cert: &invalidCert,
 					Key:  &key,
@@ -518,7 +620,7 @@ func TestIstioCertificateControllerReconciler_Simple(t *testing.T) {
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "egress",
-			TLSOptions: appv1alpha1.TLSOptions{
+			TLSOptions: &appv1alpha1.TLSOptions{
 				TLSSecret: &appv1alpha1.TLSSecret{
 					Cert: &cert,
 					Key:  &key,
@@ -603,7 +705,7 @@ func TestIstioCertificateControllerReconciler_Passthrough(t *testing.T) {
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
-			TLSOptions: appv1alpha1.TLSOptions{
+			TLSOptions: &appv1alpha1.TLSOptions{
 				TLSSecret: &appv1alpha1.TLSSecret{
 					Cert: &cert,
 					Key:  &key,
