@@ -252,7 +252,7 @@ func (r *ReconcileIstioCertificate) ReconcileSecret(request reconcile.Request, c
 }
 
 func (r *ReconcileIstioCertificate) validation(request reconcile.Request, certificate *appv1alpha1.IstioCertificate) error {
-	err := validate.ValidateTLSOptionExists(certificate)
+	err := validate.TLSOptionExists(certificate)
 	if err != nil {
 		return err
 	}

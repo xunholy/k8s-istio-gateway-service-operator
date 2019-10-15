@@ -62,7 +62,7 @@ func TestGatewayReconcile_TLSSecret(t *testing.T) {
 					Port:        80,
 					Protocol:    "HTTPS",
 					TrafficType: "ingress",
-					TLSOptions: appv1alpha1.TLSOptions{
+					TLSOptions: &appv1alpha1.TLSOptions{
 						TLSSecret: &appv1alpha1.TLSSecret{
 							Cert: &cert,
 							Key:  &key,
@@ -117,7 +117,7 @@ func TestGatewayReconcile_TLSSecretPath(t *testing.T) {
 					Port:        80,
 					Protocol:    "HTTPS",
 					TrafficType: "ingress",
-					TLSOptions: appv1alpha1.TLSOptions{
+					TLSOptions: &appv1alpha1.TLSOptions{
 						TLSSecretPath: &appv1alpha1.TLSSecretPath{
 							CertPath: "/example/path/to/file",
 							KeyPath:  "/example/path/to/file",
@@ -173,7 +173,7 @@ func TestGatewayReconcile_TLSSecretRef(t *testing.T) {
 					Port:        80,
 					Protocol:    "HTTPS",
 					TrafficType: "ingress",
-					TLSOptions: appv1alpha1.TLSOptions{
+					TLSOptions: &appv1alpha1.TLSOptions{
 						TLSSecretRef: &appv1alpha1.TLSSecretRef{
 							SecretName: "example-secret",
 						},

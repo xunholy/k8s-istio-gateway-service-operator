@@ -529,8 +529,8 @@ func TestCertAndKeyWithSecretRef(t *testing.T) {
 		},
 	}
 	res, err := r.Reconcile(req)
-	if err != nil {
-		t.Fatalf("reconcile: (%v)", err)
+	if err == nil {
+		t.Fatalf("Expected failure due to TLSSecretRef not found (%v)", err)
 	}
 	// Check the result of reconciliation to make sure it has the desired state.
 	if !res.Requeue {
