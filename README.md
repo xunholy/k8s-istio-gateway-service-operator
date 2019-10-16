@@ -1,11 +1,9 @@
 ![Build](https://github.com/xUnholy/k8s-istio-certificate-operator/workflows/Build%20And%20Push/badge.svg)
 ![Test](https://github.com/xUnholy/k8s-istio-certificate-operator/workflows/Unit%20Test/badge.svg)
 
+# Gateway Service Operator
 
-
-# Certificate Operator
-
-This project creates a custom Kubertenes controller to process IstioCertificate resourcee - Making certificate management in Kubernetes with Istio easy.
+This project creates a custom Kubertenes controller to process GatewayService resourcee - Making certificate management in Kubernetes with Istio easy.
 
 ## Introduction
 
@@ -33,7 +31,7 @@ The following is an example of how to structure the required CRD.
 
 ```yaml
 apiVersion: app.example.com/v1alpha1
-kind: IstioCertificate
+kind: GatewayService
 metadata:
   name: example-istio-certificate
   namespace: default
@@ -81,7 +79,7 @@ Push the certificate-operator Docker image to a registry
 docker push xunholy/k8s-operator:latest
 ```
 
-Update the [operator.yaml](certificate-operator/deploy/operator.yaml) manifest to use the built image name.
+Update the [operator.yaml](gatewayservice-operator/deploy/operator.yaml) manifest to use the built image name.
 
 Deploy CRDs to a Kubernetes cluster to extend the API server and create the required objects
 
@@ -89,7 +87,7 @@ Deploy CRDs to a Kubernetes cluster to extend the API server and create the requ
 kubectl apply -f deploy/ -R -n istio-system
 ```
 
-Note: This will also deploy a example IstioCertificate CRD into the Kubernetes cluster. View the file [HERE](certificate-operator/deploy/crds/app_v1alpha1_istiocertificate_cr.yaml)
+Note: This will also deploy a example GatewayService CRD into the Kubernetes cluster. View the file [HERE](gatewayservice-operator/deploy/crds/app_v1alpha1_gatewayservice_cr.yaml)
 
 Verify the certificate operator is running
 
@@ -110,11 +108,11 @@ operator-sdk new certificate-operator --repo github.com/xUnholy/k8s-operator
 Add a new API for the custom resource
 
 ```bash
- operator-sdk add api --api-version=app.example.com/v1alpha1 --kind=IstioCertificate
+ operator-sdk add api --api-version=app.example.com/v1alpha1 --kind=GatewayService
 ```
 
-Add a new controller that watches for IstioCertificate
+Add a new controller that watches for GatewayService
 
 ```bash
-operator-sdk add controller --api-version=app.example.com/v1alpha1 --kind=IstioCertificate
+operator-sdk add controller --api-version=app.example.com/v1alpha1 --kind=GatewayService
 ```
