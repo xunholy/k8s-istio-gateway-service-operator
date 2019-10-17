@@ -10,7 +10,7 @@ import (
 	"github.com/xUnholy/k8s-operator/internal/pkg/validate"
 
 	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
-	// istio "istio.io/api/networking/v1alpha3"
+	// networkv3 "istio.io/api/networking/v1alpha3"
 
 	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
@@ -18,7 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	istio "knative.dev/pkg/apis/istio/v1alpha3"
+	networkv3 "knative.dev/pkg/apis/istio/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -179,7 +179,7 @@ func (r *ReconcileGatewayService) ReconcileCRD(request reconcile.Request) (*appv
 }
 
 func (r *ReconcileGatewayService) ReconcileGateway(request reconcile.Request, certificate *appv1alpha1.GatewayService, trafficType string) error {
-	gatewayObj := &istio.Gateway{}
+	gatewayObj := &networkv3.Gateway{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType), Namespace: request.Namespace}, gatewayObj)
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -272,7 +272,7 @@ func (r *ReconcileGatewayService) validation(request reconcile.Request, certific
 // TODO: If a secret is SIMPLE and eventually becomes PASSTHROUGH the orignial secret is not cleaned up in istio-system.
 // However, when the CRD is removed due to ownership both secrets will be cleaned up appropriately.
 func secretNamespace(c *appv1alpha1.GatewayService) string {
-	if c.Spec.Mode == istio.TLSModeSimple {
+	if c.Spec.Mode == networkv3.TLSModeSimple {
 		return "istio-system"
 	}
 	// Assume PASSTHROUGH has been declared

@@ -16,7 +16,7 @@ Segregation of duties is critical when provisioning Istio in a Kubernetes cluste
 The following is an example of how to structure the required CRD.
 
 ```yaml
-apiVersion: app.example.com/v1alpha1
+apiVersion: gatewayservice.xunholy.github.com/v1alpha1
 kind: GatewayService
 metadata:
   name: example-gateway-service
@@ -41,9 +41,9 @@ Note: A VirtualService that is bound to a gateway must having a matching host in
 
 The Port on which should be used to listen for incoming connections.
 
-Note: The `name` field in the Gateway server block sued the following convention: `"<protocol-name-namespace>"`
+Note: The `name` field in the Gateway server block uses the following convention: `"<protocol-name-namespace>"`
 
-*Example*:
+This is an *Example* of how the CRD will generate the `name` field automatically as it is not explicitly defined:
 
 ```yaml
 port:
@@ -59,6 +59,8 @@ The following protocols are supported and can be specified: `HTTP`, `HTTPS`, `GR
 ### Mode
 
 The following modes are supported and can be specified: `SIMPLE`, `PASSTHROUGH` and `MUTUAL`.
+
+Note: For additional information see the following link [HERE](https://istio.io/docs/reference/config/networking/v1alpha3/gateway/#Server-TLSOptions-TLSmode).
 
 ### TrafficType
 
@@ -90,15 +92,21 @@ However, if SDS is available within your Kubernetes cluster this method is **not
 
 Using TLSSecretPath also requires that the Pods deployment is updated to mount the tls secret into the Pod.
 
+Note: This option is still a work in progress.
+
 ## Example Architecture
 
 The following diagrams will demonstrate both `SIMPLE` and `PASSTHROUGH` architecture.
 
 ### SIMPLE Mode
 
+If `SIMPLE` mode is definted....
+
 <img src="./docs/images/architecture-simple.png"/>
 
 ### PASSTHROUGH Mode
+
+If `PASSTHROUGH` mode is definted....
 
 <img src="./docs/images/architecture-passthrough.png"/>
 
@@ -126,7 +134,7 @@ Deploy CRDs to a Kubernetes cluster to extend the API server and create the requ
 kubectl apply -f deploy/ -R -n istio-system
 ```
 
-Note: This will also deploy a example GatewayService CRD into the Kubernetes cluster. View the file [HERE](gatewayservice-operator/deploy/crds/app_v1alpha1_gatewayservice_cr.yaml)
+Note: This will also deploy the three TLSOptions examples into the Kubernetes cluster. View the file [HERE](gatewayservice-operator/deploy/crds/app_v1alpha1_gatewayservice_cr.yaml)
 
 Verify the gatewayservice operator is running
 
@@ -141,17 +149,17 @@ kubectl get pod -l name=gatewayservice-operator
 Generate default operator project.
 
 ```bash
-operator-sdk new gatewayservice-operator --repo github.com/xUnholy/k8s-operator
+operator-sdk new gatewayservice-operator --repo github.com/xUnholy/k8s-istio-gateway-service-operator
 ```
 
 Add a new API for the custom resource
 
 ```bash
- operator-sdk add api --api-version=app.example.com/v1alpha1 --kind=GatewayService
+ operator-sdk add api --api-version=gatewayservice.xunholy.github.com/v1alpha1 --kind=GatewayService
 ```
 
 Add a new controller that watches for GatewayService
 
 ```bash
-operator-sdk add controller --api-version=app.example.com/v1alpha1 --kind=GatewayService
+operator-sdk add controller --api-version=gatewayservice.xunholy.github.com/v1alpha1 --kind=GatewayService
 ```
