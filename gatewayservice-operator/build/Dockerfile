@@ -1,11 +1,11 @@
 FROM registry.access.redhat.com/ubi7/ubi-minimal:latest
 
-ENV OPERATOR=/usr/local/bin/certificate-operator \
+ENV OPERATOR=/usr/local/bin/gatewayservice-operator \
     USER_UID=1001 \
-    USER_NAME=certificate-operator
+    USER_NAME=gatewayservice-operator
 
 # install operator binary
-COPY build/_output/bin/certificate-operator ${OPERATOR}
+COPY build/_output/bin/gatewayservice-operator ${OPERATOR}
 
 COPY build/bin /usr/local/bin
 RUN  /usr/local/bin/user_setup
