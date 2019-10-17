@@ -87,7 +87,7 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 			// connections
 			Port: networkv3.Port{
 				// Label assigned to the port.
-				Name: fmt.Sprintf("%s-%s", strings.ToLower(string(certificate.Spec.Protocol)), certificate.ObjectMeta.Name),
+				Name: fmt.Sprintf("%s-%s-%s", strings.ToLower(string(certificate.Spec.Protocol)), certificate.ObjectMeta.Name, certificate.ObjectMeta.Namespace),
 
 				// REQUIRED: A valid non-negative integer port number.
 				Number: certificate.Spec.Port,
