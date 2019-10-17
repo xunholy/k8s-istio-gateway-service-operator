@@ -78,7 +78,7 @@ func TestGatewayReconcile_TLSSecret(t *testing.T) {
 			Servers: []networkv3.Server{
 				{
 					Port: networkv3.Port{
-						Name:     "https-example-app",
+						Name:     "https-example-app-application",
 						Number:   80,
 						Protocol: "HTTPS",
 					},
@@ -133,7 +133,7 @@ func TestGatewayReconcile_TLSSecretPath(t *testing.T) {
 			Servers: []networkv3.Server{
 				{
 					Port: networkv3.Port{
-						Name:     "https-example-app",
+						Name:     "https-example-app-application",
 						Number:   80,
 						Protocol: "HTTPS",
 					},
@@ -188,7 +188,7 @@ func TestGatewayReconcile_TLSSecretRef(t *testing.T) {
 			Servers: []networkv3.Server{
 				{
 					Port: networkv3.Port{
-						Name:     "https-example-app",
+						Name:     "https-example-app-application",
 						Number:   80,
 						Protocol: "HTTPS",
 					},
