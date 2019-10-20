@@ -112,6 +112,7 @@ type CreatedSecretDetails struct {
 
 // GatewayService is the Schema for the gatewayservice API
 // +k8s:openapi-gen=true
+// +kubebuilder:resource:shortName=gs
 // +kubebuilder:subresource:status
 type GatewayService struct {
 	metav1.TypeMeta   `json:",inline"`
