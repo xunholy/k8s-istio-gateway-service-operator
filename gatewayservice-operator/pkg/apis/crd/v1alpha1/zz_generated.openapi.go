@@ -11,13 +11,13 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"./pkg/apis/app/v1alpha1.GatewayService":       schema_pkg_apis_app_v1alpha1_GatewayService(ref),
-		"./pkg/apis/app/v1alpha1.GatewayServiceSpec":   schema_pkg_apis_app_v1alpha1_GatewayServiceSpec(ref),
-		"./pkg/apis/app/v1alpha1.GatewayServiceStatus": schema_pkg_apis_app_v1alpha1_GatewayServiceStatus(ref),
+		"./pkg/apis/crd/v1alpha1.GatewayService":       schema_pkg_apis_crd_v1alpha1_GatewayService(ref),
+		"./pkg/apis/crd/v1alpha1.GatewayServiceSpec":   schema_pkg_apis_crd_v1alpha1_GatewayServiceSpec(ref),
+		"./pkg/apis/crd/v1alpha1.GatewayServiceStatus": schema_pkg_apis_crd_v1alpha1_GatewayServiceStatus(ref),
 	}
 }
 
-func schema_pkg_apis_app_v1alpha1_GatewayService(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_crd_v1alpha1_GatewayService(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -44,23 +44,23 @@ func schema_pkg_apis_app_v1alpha1_GatewayService(ref common.ReferenceCallback) c
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/app/v1alpha1.GatewayServiceSpec"),
+							Ref: ref("./pkg/apis/crd/v1alpha1.GatewayServiceSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("./pkg/apis/app/v1alpha1.GatewayServiceStatus"),
+							Ref: ref("./pkg/apis/crd/v1alpha1.GatewayServiceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/app/v1alpha1.GatewayServiceSpec", "./pkg/apis/app/v1alpha1.GatewayServiceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"./pkg/apis/crd/v1alpha1.GatewayServiceSpec", "./pkg/apis/crd/v1alpha1.GatewayServiceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
-func schema_pkg_apis_app_v1alpha1_GatewayServiceSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_crd_v1alpha1_GatewayServiceSpec(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -110,7 +110,7 @@ func schema_pkg_apis_app_v1alpha1_GatewayServiceSpec(ref common.ReferenceCallbac
 					"tlsOptions": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Options: TLSSecret|TLSSecretRef|TLSSecretPath Supports either creating the secret, referencing the secret, or explicitly referencing the mount path in the pod.",
-							Ref:         ref("./pkg/apis/app/v1alpha1.TLSOptions"),
+							Ref:         ref("./pkg/apis/crd/v1alpha1.TLSOptions"),
 						},
 					},
 				},
@@ -118,11 +118,11 @@ func schema_pkg_apis_app_v1alpha1_GatewayServiceSpec(ref common.ReferenceCallbac
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/app/v1alpha1.TLSOptions"},
+			"./pkg/apis/crd/v1alpha1.TLSOptions"},
 	}
 }
 
-func schema_pkg_apis_app_v1alpha1_GatewayServiceStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
+func schema_pkg_apis_crd_v1alpha1_GatewayServiceStatus(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
@@ -131,13 +131,13 @@ func schema_pkg_apis_app_v1alpha1_GatewayServiceStatus(ref common.ReferenceCallb
 					"condition": {
 						SchemaProps: spec.SchemaProps{
 							Description: "INSERT ADDITIONAL STATUS FIELD - define observed state of cluster Important: Run \"operator-sdk generate k8s\" to regenerate code after modifying this file Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html",
-							Ref:         ref("./pkg/apis/app/v1alpha1.Condition"),
+							Ref:         ref("./pkg/apis/crd/v1alpha1.Condition"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"./pkg/apis/app/v1alpha1.Condition"},
+			"./pkg/apis/crd/v1alpha1.Condition"},
 	}
 }
