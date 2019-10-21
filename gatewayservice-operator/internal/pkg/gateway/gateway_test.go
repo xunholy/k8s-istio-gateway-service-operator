@@ -37,10 +37,10 @@ func TestGatewayReconcile_Default(t *testing.T) {
 		},
 	}
 	gatewayConfig := g.GatewayConfig{
-		Name:         fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
-		TrafficType:  trafficType,
-		Certificates: certificatesList,
-		Gateway:      gateway,
+		Name:           fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
+		TrafficType:    trafficType,
+		GatewayService: certificatesList,
+		Gateway:        gateway,
 	}
 	gatewayObject := g.Reconcile(gatewayConfig)
 	if !reflect.DeepEqual(gatewayObject, expected) {
@@ -92,10 +92,10 @@ func TestGatewayReconcile_TLSSecret(t *testing.T) {
 		},
 	}
 	gatewayConfig := g.GatewayConfig{
-		Name:         fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
-		TrafficType:  trafficType,
-		Certificates: certificatesList,
-		Gateway:      gateway,
+		Name:           fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
+		TrafficType:    trafficType,
+		GatewayService: certificatesList,
+		Gateway:        gateway,
 	}
 	gatewayObject := g.Reconcile(gatewayConfig)
 	if !reflect.DeepEqual(gatewayObject, expected) {
@@ -148,10 +148,10 @@ func TestGatewayReconcile_TLSSecretPath(t *testing.T) {
 		},
 	}
 	gatewayConfig := g.GatewayConfig{
-		Name:         fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
-		TrafficType:  trafficType,
-		Certificates: certificatesList,
-		Gateway:      gateway,
+		Name:           fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
+		TrafficType:    trafficType,
+		GatewayService: certificatesList,
+		Gateway:        gateway,
 	}
 	gatewayObject := g.Reconcile(gatewayConfig)
 	if !reflect.DeepEqual(gatewayObject, expected) {
@@ -202,10 +202,10 @@ func TestGatewayReconcile_TLSSecretRef(t *testing.T) {
 		},
 	}
 	gatewayConfig := g.GatewayConfig{
-		Name:         fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
-		TrafficType:  trafficType,
-		Certificates: certificatesList,
-		Gateway:      gateway,
+		Name:           fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
+		TrafficType:    trafficType,
+		GatewayService: certificatesList,
+		Gateway:        gateway,
 	}
 	gatewayObject := g.Reconcile(gatewayConfig)
 	if !reflect.DeepEqual(gatewayObject, expected) {

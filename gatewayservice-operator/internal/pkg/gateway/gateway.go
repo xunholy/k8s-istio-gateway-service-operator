@@ -12,17 +12,17 @@ import (
 )
 
 type GatewayConfig struct {
-	Name         string
-	TrafficType  string
-	Certificates *appv1alpha1.GatewayServiceList
-	Gateway      *networkv3.Gateway
+	Name           string
+	TrafficType    string
+	GatewayService *appv1alpha1.GatewayServiceList
+	Gateway        *networkv3.Gateway
 }
 
 func Reconcile(g GatewayConfig) *networkv3.Gateway {
 	// Create empty server stanza array
 	servers := []networkv3.Server{}
 	// Add all gatewayservice server entries into servers array
-	for _, gatewayservice := range g.Certificates.Items {
+	for _, gatewayservice := range g.GatewayService.Items {
 
 		// Secrets will be default to using Kubernetes secret objects leveraging SDS
 		secretRef := &networkv3.TLSOptions{}

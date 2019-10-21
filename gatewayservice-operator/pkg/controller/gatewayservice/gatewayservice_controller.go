@@ -203,10 +203,10 @@ func (r *ReconcileGatewayService) ReconcileGateway(request reconcile.Request, ga
 	}
 
 	g := gateway.GatewayConfig{
-		Name:         fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType),
-		TrafficType:  trafficType,
-		Certificates: gatewayservices,
-		Gateway:      gatewayObj,
+		Name:           fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType),
+		TrafficType:    trafficType,
+		GatewayService: gatewayservices,
+		Gateway:        gatewayObj,
 	}
 	reconciledGatewayObj := gateway.Reconcile(g)
 	return r.client.Update(context.TODO(), reconciledGatewayObj)

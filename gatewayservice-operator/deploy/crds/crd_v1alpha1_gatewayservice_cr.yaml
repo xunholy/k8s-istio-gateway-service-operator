@@ -1,7 +1,7 @@
 ---
 # Scenario: User defines TLSOption to include a Cert & Key which will result in a secret being created and references in the Gateway.
 ---
-apiVersion: gatewayservice.crd.xunholy.github.com/v1alpha1
+apiVersion: crd.xunholy.github.com/v1alpha1
 kind: GatewayService
 metadata:
   name: tls-secret-example
@@ -20,7 +20,7 @@ spec:
 ---
 # Scenario: User explicitly referneces a secret - The operator assumes the secret has been created previously and is available to use in the Gateway.
 ---
-apiVersion: gatewayservice.crd.xunholy.github.com/v1alpha1
+apiVersion: crd.xunholy.github.com/v1alpha1
 kind: GatewayService
 metadata:
   name: tls-secret-ref-example
@@ -38,7 +38,7 @@ spec:
 ---
 # Scenario: User defines cert & key file paths that are mounted in the Istio Ingress Gateway - This will result in the Pod being restarted.
 ---
-apiVersion: gatewayservice.crd.xunholy.github.com/v1alpha1
+apiVersion: crd.xunholy.github.com/v1alpha1
 kind: GatewayService
 metadata:
   name: tls-secret-path-example
