@@ -1,4 +1,4 @@
-module github.com/xUnholy/k8s-operator
+module github.com/xUnholy/k8s-istio-gateway-service-operator
 
 require (
 	github.com/go-openapi/spec v0.19.0

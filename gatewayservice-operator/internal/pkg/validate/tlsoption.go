@@ -3,7 +3,7 @@ package validate
 import (
 	"fmt"
 
-	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
+	appv1alpha1 "github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 )
 
 func TLSOptionExists(certificate *appv1alpha1.GatewayService) error {

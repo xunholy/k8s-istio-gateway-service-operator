@@ -1,7 +1,7 @@
 package status
 
 import (
-	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
+	appv1alpha1 "github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 )
 
 type StatusConfig struct {
