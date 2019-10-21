@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
+	appv1alpha1 "github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 
 	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
 	// networkv3 "istio.io/api/networking/v1alpha3"

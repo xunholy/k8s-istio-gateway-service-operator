@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	s "github.com/xUnholy/k8s-operator/internal/pkg/status"
-	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
+	s "github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/status"
+	appv1alpha1 "github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 )
 
 var (

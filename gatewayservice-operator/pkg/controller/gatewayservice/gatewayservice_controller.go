@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/xUnholy/k8s-operator/internal/pkg/gateway"
-	"github.com/xUnholy/k8s-operator/internal/pkg/secret"
-	"github.com/xUnholy/k8s-operator/internal/pkg/status"
-	"github.com/xUnholy/k8s-operator/internal/pkg/validate"
+	"github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/gateway"
+	"github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/secret"
+	"github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/status"
+	"github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/validate"
 
 	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
 	// networkv3 "istio.io/api/networking/v1alpha3"
 
-	appv1alpha1 "github.com/xUnholy/k8s-operator/pkg/apis/app/v1alpha1"
+	appv1alpha1 "github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/fields"

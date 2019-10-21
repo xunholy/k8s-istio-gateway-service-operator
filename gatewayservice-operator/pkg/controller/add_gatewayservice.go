@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/xUnholy/k8s-operator/pkg/controller/gatewayservice"
+	"github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/controller/gatewayservice"
 )
 
 func init() {
