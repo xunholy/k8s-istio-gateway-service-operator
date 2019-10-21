@@ -19,7 +19,7 @@ var (
 )
 
 func TestSecretReconcile(t *testing.T) {
-	certificate := &appv1alpha1.GatewayService{
+	gatewayservice := &appv1alpha1.GatewayService{
 		Spec: appv1alpha1.GatewayServiceSpec{
 			TLSOptions: &appv1alpha1.TLSOptions{
 				TLSSecret: &appv1alpha1.TLSSecret{
@@ -49,7 +49,7 @@ func TestSecretReconcile(t *testing.T) {
 		Name:        fmt.Sprintf("%s-%s-secret", name, namespace),
 		Namespace:   namespace,
 		Labels:      map[string]string{"Namespace": namespace},
-		Certificate: certificate,
+		Certificate: gatewayservice,
 	}
 	secretObject := s.Reconcile(secretConfig)
 	if !reflect.DeepEqual(secretObject, expected) {
