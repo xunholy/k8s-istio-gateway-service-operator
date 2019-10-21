@@ -88,97 +88,97 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 func (r *ReconcileGatewayService) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	logger.Info("Reconciling GatewayService")
-	certificate, err := r.ReconcileCRD(request)
+	gatewayservice, err := r.ReconcileCRD(request)
 	if err != nil {
 		logger.Error(err, "Failed to process CRD request. Requeue")
-		statusErr := r.ReconcileCRDStatus(request, certificate, err)
+		statusErr := r.ReconcileCRDStatus(request, gatewayservice, err)
 		if statusErr != nil {
 			logger.Error(statusErr, "Failed to update CRD status. Requeue")
 		}
 		return reconcile.Result{Requeue: true}, err
 	}
-	if certificate == nil {
+	if gatewayservice == nil {
 		return reconcile.Result{}, nil
 	}
 
-	err = r.validation(request, certificate)
+	err = r.validation(request, gatewayservice)
 	if err != nil {
 		logger.Error(err, "Failed to process TLSSecretRef request. Requeue")
-		statusErr := r.ReconcileCRDStatus(request, certificate, err)
+		statusErr := r.ReconcileCRDStatus(request, gatewayservice, err)
 		if statusErr != nil {
 			logger.Error(statusErr, "Failed to update CRD status. Requeue")
 		}
 		return reconcile.Result{Requeue: true}, err
 	}
 
-	logger.Info("Reconcile Secret object.", "certificate.Spec.Mode", certificate.Spec.Mode)
-	err = r.ReconcileSecret(request, certificate)
+	logger.Info("Reconcile Secret object.", "gatewayservice.Spec.Mode", gatewayservice.Spec.Mode)
+	err = r.ReconcileSecret(request, gatewayservice)
 	if err != nil {
 		logger.Error(err, "Failed to process secret request. Requeue")
-		statusErr := r.ReconcileCRDStatus(request, certificate, err)
+		statusErr := r.ReconcileCRDStatus(request, gatewayservice, err)
 		if statusErr != nil {
 			logger.Error(statusErr, "Failed to update CRD status. Requeue")
 		}
 		return reconcile.Result{Requeue: true}, err
 	}
 
-	logger.Info("Reconcile Gateway object.", "certificate.Spec.TrafficType", certificate.Spec.TrafficType)
-	err = r.ReconcileGateway(request, certificate, certificate.Spec.TrafficType)
+	logger.Info("Reconcile Gateway object.", "gatewayservice.Spec.TrafficType", gatewayservice.Spec.TrafficType)
+	err = r.ReconcileGateway(request, gatewayservice, gatewayservice.Spec.TrafficType)
 	if err != nil {
 		logger.Error(err, "Failed to process gateway request. Requeue")
-		statusErr := r.ReconcileCRDStatus(request, certificate, err)
+		statusErr := r.ReconcileCRDStatus(request, gatewayservice, err)
 		if statusErr != nil {
 			logger.Error(statusErr, "Failed to update CRD status. Requeue")
 		}
 		return reconcile.Result{Requeue: true}, err
 	}
 
-	err = r.ReconcileCRDStatus(request, certificate, nil)
+	err = r.ReconcileCRDStatus(request, gatewayservice, nil)
 	if err != nil {
 		logger.Error(err, "Failed to update CRD status after completion. Requeue")
 	}
 	return reconcile.Result{Requeue: true}, nil
 }
 
-func (r *ReconcileGatewayService) ReconcileCRDStatus(request reconcile.Request, certificate *appv1alpha1.GatewayService, err error) error {
+func (r *ReconcileGatewayService) ReconcileCRDStatus(request reconcile.Request, gatewayservice *appv1alpha1.GatewayService, err error) error {
 	s := status.StatusConfig{
 		Success:         err == nil,
 		ErrorMessage:    "No error found",
 		SecretName:      fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
-		SecretNamespace: secretNamespace(certificate),
+		SecretNamespace: secretNamespace(gatewayservice),
 	}
 	if err != nil {
 		s.ErrorMessage = err.Error()
 	}
-	certificate.Status = *status.Reconcile(s)
-	return r.client.Update(context.TODO(), certificate)
+	gatewayservice.Status = *status.Reconcile(s)
+	return r.client.Update(context.TODO(), gatewayservice)
 }
 
 func (r *ReconcileGatewayService) ReconcileCRD(request reconcile.Request) (*appv1alpha1.GatewayService, error) {
 	// Fetch the GatewayService instance
-	certificate := &appv1alpha1.GatewayService{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, certificate)
+	gatewayservice := &appv1alpha1.GatewayService{}
+	err := r.client.Get(context.TODO(), request.NamespacedName, gatewayservice)
 	if err != nil {
 		if errors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
 			for _, trafficType := range []string{"ingress", "egress"} {
-				err := r.ReconcileGateway(request, certificate, trafficType)
+				err := r.ReconcileGateway(request, gatewayservice, trafficType)
 				if err != nil {
-					return certificate, err
+					return gatewayservice, err
 				}
 			}
 			// Once the CRD has been removed there is no reason to requeue any additional times.
 			return nil, nil
 		}
 		// Error reading the object - requeue the request.
-		return certificate, err
+		return gatewayservice, err
 	}
-	return certificate, nil
+	return gatewayservice, nil
 }
 
-func (r *ReconcileGatewayService) ReconcileGateway(request reconcile.Request, certificate *appv1alpha1.GatewayService, trafficType string) error {
+func (r *ReconcileGatewayService) ReconcileGateway(request reconcile.Request, gatewayservice *appv1alpha1.GatewayService, trafficType string) error {
 	gatewayObj := &networkv3.Gateway{}
 	err := r.client.Get(context.TODO(), types.NamespacedName{Name: fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType), Namespace: request.Namespace}, gatewayObj)
 	if err != nil {
@@ -191,13 +191,13 @@ func (r *ReconcileGatewayService) ReconcileGateway(request reconcile.Request, ce
 
 	// List all GatewayService CRDs
 	// TODO: Consider using the client.MatchingLabels() and client.MatchingField() to handle options
-	certificates := &appv1alpha1.GatewayServiceList{}
+	gatewayservices := &appv1alpha1.GatewayServiceList{}
 	listOps := &client.ListOptions{
 		Namespace:     request.Namespace,
 		FieldSelector: fields.OneTermEqualSelector("spec.trafficType", trafficType),
 	}
 
-	err = r.client.List(context.TODO(), listOps, certificates)
+	err = r.client.List(context.TODO(), listOps, gatewayservices)
 	if err != nil {
 		return err
 	}
@@ -205,16 +205,16 @@ func (r *ReconcileGatewayService) ReconcileGateway(request reconcile.Request, ce
 	g := gateway.GatewayConfig{
 		Name:         fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType),
 		TrafficType:  trafficType,
-		Certificates: certificates,
+		Certificates: gatewayservices,
 		Gateway:      gatewayObj,
 	}
 	reconciledGatewayObj := gateway.Reconcile(g)
 	return r.client.Update(context.TODO(), reconciledGatewayObj)
 }
 
-func (r *ReconcileGatewayService) ReconcileSecret(request reconcile.Request, certificate *appv1alpha1.GatewayService) error {
-	if certificate.Spec.TLSOptions.TLSSecret != nil {
-		if certificate.Spec.TLSOptions.TLSSecret.Cert == nil || certificate.Spec.TLSOptions.TLSSecret.Key == nil {
+func (r *ReconcileGatewayService) ReconcileSecret(request reconcile.Request, gatewayservice *appv1alpha1.GatewayService) error {
+	if gatewayservice.Spec.TLSOptions.TLSSecret != nil {
+		if gatewayservice.Spec.TLSOptions.TLSSecret.Cert == nil || gatewayservice.Spec.TLSOptions.TLSSecret.Key == nil {
 			return fmt.Errorf("cert and/or key cannot be nil")
 		}
 		secretObj := &corev1.Secret{}
@@ -222,15 +222,15 @@ func (r *ReconcileGatewayService) ReconcileSecret(request reconcile.Request, cer
 		err := r.client.Get(context.TODO(), key, secretObj)
 		if err != nil {
 			if errors.IsNotFound(err) {
-				err := validate.ValidateSecretEncoding(*certificate.Spec.TLSOptions.TLSSecret)
+				err := validate.ValidateSecretEncoding(*gatewayservice.Spec.TLSOptions.TLSSecret)
 				if err != nil {
 					return fmt.Errorf("cert and/or key are not base64 encoded")
 				}
 				s := secret.SecretConfig{
 					Name:        fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
-					Namespace:   secretNamespace(certificate),
+					Namespace:   secretNamespace(gatewayservice),
 					Labels:      map[string]string{"Namespace": request.Namespace},
-					Certificate: certificate,
+					Certificate: gatewayservice,
 				}
 				reconciledSecretObj := secret.Reconcile(s)
 
@@ -239,7 +239,7 @@ func (r *ReconcileGatewayService) ReconcileSecret(request reconcile.Request, cer
 				// reconciling the owner object on changes to owned (with a Watch + EnqueueRequestForOwner).
 				// Since only one OwnerReference can be a controller, it returns an error if
 				// there is another OwnerReference with Controller flag set.
-				err = controllerutil.SetControllerReference(certificate, reconciledSecretObj, r.scheme)
+				err = controllerutil.SetControllerReference(gatewayservice, reconciledSecretObj, r.scheme)
 				if err != nil {
 					return err
 				}
@@ -251,17 +251,17 @@ func (r *ReconcileGatewayService) ReconcileSecret(request reconcile.Request, cer
 	return nil
 }
 
-func (r *ReconcileGatewayService) validation(request reconcile.Request, certificate *appv1alpha1.GatewayService) error {
-	err := validate.TLSOptionExists(certificate)
+func (r *ReconcileGatewayService) validation(request reconcile.Request, gatewayservice *appv1alpha1.GatewayService) error {
+	err := validate.TLSOptionExists(gatewayservice)
 	if err != nil {
 		return err
 	}
-	if certificate.Spec.TLSOptions.TLSSecretRef != nil {
+	if gatewayservice.Spec.TLSOptions.TLSSecretRef != nil {
 		secret := &corev1.Secret{}
-		err := r.client.Get(context.TODO(), types.NamespacedName{Name: certificate.Spec.TLSOptions.TLSSecretRef.SecretName, Namespace: secretNamespace(certificate)}, secret)
+		err := r.client.Get(context.TODO(), types.NamespacedName{Name: gatewayservice.Spec.TLSOptions.TLSSecretRef.SecretName, Namespace: secretNamespace(gatewayservice)}, secret)
 		if err != nil {
 			if errors.IsNotFound(err) {
-				return fmt.Errorf("reference to secret %v in namespace %v does not exist", secret, secretNamespace(certificate))
+				return fmt.Errorf("reference to secret %v in namespace %v does not exist", secret, secretNamespace(gatewayservice))
 			}
 			return err
 		}
@@ -271,10 +271,10 @@ func (r *ReconcileGatewayService) validation(request reconcile.Request, certific
 
 // TODO: If a secret is SIMPLE and eventually becomes PASSTHROUGH the orignial secret is not cleaned up in istio-system.
 // However, when the CRD is removed due to ownership both secrets will be cleaned up appropriately.
-func secretNamespace(c *appv1alpha1.GatewayService) string {
-	if c.Spec.Mode == networkv3.TLSModeSimple {
+func secretNamespace(gs *appv1alpha1.GatewayService) string {
+	if gs.Spec.Mode == networkv3.TLSModeSimple {
 		return "istio-system"
 	}
 	// Assume PASSTHROUGH has been declared
-	return c.Namespace
+	return gs.Namespace
 }

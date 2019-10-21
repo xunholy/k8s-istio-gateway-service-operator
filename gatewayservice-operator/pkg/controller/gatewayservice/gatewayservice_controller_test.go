@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	name      = "application-certificate"
+	name      = "example"
 	namespace = "application"
 	cert      = "Q2VydAo="
 	key       = "S2V5Cg=="
@@ -30,7 +30,7 @@ var (
 
 func TestGatewayServiceController(t *testing.T) {
 	// A TestGatewayService resource with metadata and spec.
-	certificate := &appv1alpha1.GatewayService{
+	gatewayservice := &appv1alpha1.GatewayService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -51,14 +51,14 @@ func TestGatewayServiceController(t *testing.T) {
 	}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificate}
+	objs := []runtime.Object{gatewayservice}
 
 	// List ANZCertificate objects filtering by labels
-	certificatesList := &appv1alpha1.GatewayServiceList{}
+	gatewayservicesList := &appv1alpha1.GatewayServiceList{}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, certificate, certificatesList)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gatewayservice, gatewayservicesList)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -71,7 +71,7 @@ func TestGatewayServiceController(t *testing.T) {
 		{key: "TrafficType", value: "egress"},
 	}
 	for _, i := range tests {
-		err := cl.List(context.TODO(), client.MatchingField(i.key, i.value), certificatesList)
+		err := cl.List(context.TODO(), client.MatchingField(i.key, i.value), gatewayservicesList)
 		if err != nil {
 			t.Fatalf("list certificates: (%v)", err)
 		}
@@ -80,7 +80,7 @@ func TestGatewayServiceController(t *testing.T) {
 
 func TestTLSSecretRefInvalidSecret(t *testing.T) {
 	// A TestGatewayService resource with metadata and spec.
-	certificate := &appv1alpha1.GatewayService{
+	gatewayservice := &appv1alpha1.GatewayService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -101,11 +101,11 @@ func TestTLSSecretRefInvalidSecret(t *testing.T) {
 	gateway := &networkv3.Gateway{}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificate}
+	objs := []runtime.Object{gatewayservice}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -133,7 +133,7 @@ func TestTLSSecretRefInvalidSecret(t *testing.T) {
 
 func TestNoTLSOption(t *testing.T) {
 	// A TestGatewayService resource with metadata and spec.
-	certificate := &appv1alpha1.GatewayService{
+	gatewayservice := &appv1alpha1.GatewayService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -150,11 +150,11 @@ func TestNoTLSOption(t *testing.T) {
 	gateway := &networkv3.Gateway{}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificate}
+	objs := []runtime.Object{gatewayservice}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -182,16 +182,16 @@ func TestNoTLSOption(t *testing.T) {
 
 func TestCRDRemoved(t *testing.T) {
 	// A TestGatewayService resource with metadata and spec.
-	certificate := &appv1alpha1.GatewayService{}
+	gatewayservice := &appv1alpha1.GatewayService{}
 
 	gateway := &networkv3.Gateway{}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificate}
+	objs := []runtime.Object{gatewayservice}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -219,7 +219,7 @@ func TestCRDRemoved(t *testing.T) {
 
 func TestCertAndKey(t *testing.T) {
 	// A TestGatewayService resource with metadata and spec.
-	certificate := &appv1alpha1.GatewayService{
+	gatewayservice := &appv1alpha1.GatewayService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -242,11 +242,11 @@ func TestCertAndKey(t *testing.T) {
 	gateway := &networkv3.Gateway{}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificate}
+	objs := []runtime.Object{gatewayservice}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -271,8 +271,8 @@ func TestCertAndKey(t *testing.T) {
 		t.Error("reconcile did not requeue request as expected")
 	}
 	// Check if certificates has been created.
-	certificate = &appv1alpha1.GatewayService{}
-	err = r.client.Get(context.TODO(), req.NamespacedName, certificate)
+	gatewayservice = &appv1alpha1.GatewayService{}
+	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
 		t.Fatalf("get GatewayService: (%v)", err)
 	}
@@ -280,7 +280,7 @@ func TestCertAndKey(t *testing.T) {
 
 func TestCertAndNoKey(t *testing.T) {
 	// A TestGatewayService resource with metadata and spec.
-	certificate := &appv1alpha1.GatewayService{
+	gatewayservice := &appv1alpha1.GatewayService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -302,11 +302,11 @@ func TestCertAndNoKey(t *testing.T) {
 	gateway := &networkv3.Gateway{}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificate}
+	objs := []runtime.Object{gatewayservice}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -331,8 +331,8 @@ func TestCertAndNoKey(t *testing.T) {
 		t.Error("reconcile did not requeue request as expected")
 	}
 	// Check if certificates has been created.
-	certificate = &appv1alpha1.GatewayService{}
-	err = r.client.Get(context.TODO(), req.NamespacedName, certificate)
+	gatewayservice = &appv1alpha1.GatewayService{}
+	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
 		t.Fatalf("get GatewayService: (%v)", err)
 	}
@@ -340,7 +340,7 @@ func TestCertAndNoKey(t *testing.T) {
 
 func TestNoCertAndKey(t *testing.T) {
 	// A TestGatewayService resource with metadata and spec.
-	certificate := &appv1alpha1.GatewayService{
+	gatewayservice := &appv1alpha1.GatewayService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -362,11 +362,11 @@ func TestNoCertAndKey(t *testing.T) {
 	gateway := &networkv3.Gateway{}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificate}
+	objs := []runtime.Object{gatewayservice}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -391,8 +391,8 @@ func TestNoCertAndKey(t *testing.T) {
 		t.Error("reconcile did not requeue request as expected")
 	}
 	// Check if certificates has been created.
-	certificate = &appv1alpha1.GatewayService{}
-	err = r.client.Get(context.TODO(), req.NamespacedName, certificate)
+	gatewayservice = &appv1alpha1.GatewayService{}
+	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
 		t.Fatalf("get GatewayService: (%v)", err)
 	}
@@ -400,7 +400,7 @@ func TestNoCertAndKey(t *testing.T) {
 
 func TestNoCertAndNoKey(t *testing.T) {
 	// A TestGatewayService resource with metadata and spec.
-	certificate := &appv1alpha1.GatewayService{
+	gatewayservice := &appv1alpha1.GatewayService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -420,11 +420,11 @@ func TestNoCertAndNoKey(t *testing.T) {
 	gateway := &networkv3.Gateway{}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificate}
+	objs := []runtime.Object{gatewayservice}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -449,8 +449,8 @@ func TestNoCertAndNoKey(t *testing.T) {
 		t.Error("reconcile did not requeue request as expected")
 	}
 	// Check if certificates has been created.
-	certificate = &appv1alpha1.GatewayService{}
-	err = r.client.Get(context.TODO(), req.NamespacedName, certificate)
+	gatewayservice = &appv1alpha1.GatewayService{}
+	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
 		t.Fatalf("get GatewayService: (%v)", err)
 	}
@@ -458,7 +458,7 @@ func TestNoCertAndNoKey(t *testing.T) {
 
 func TestCertAndKeyWithSecretRef(t *testing.T) {
 	// A TestGatewayService resource with metadata and spec.
-	certificate := &appv1alpha1.GatewayService{
+	gatewayservice := &appv1alpha1.GatewayService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -505,14 +505,14 @@ func TestCertAndKeyWithSecretRef(t *testing.T) {
 	}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificate, gateway}
+	objs := []runtime.Object{gatewayservice, gateway}
 
 	// List ANZCertificate objects filtering by labels
 	certificatesList := &appv1alpha1.GatewayServiceList{}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate, certificatesList)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice, certificatesList)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -537,8 +537,8 @@ func TestCertAndKeyWithSecretRef(t *testing.T) {
 		t.Error("reconcile did not requeue request as expected")
 	}
 	// Check if certificates has been created.
-	certificate = &appv1alpha1.GatewayService{}
-	err = r.client.Get(context.TODO(), req.NamespacedName, certificate)
+	gatewayservice = &appv1alpha1.GatewayService{}
+	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
 		t.Fatalf("get GatewayService: (%v)", err)
 	}
@@ -548,7 +548,7 @@ func TestIncorrectCertAndKeyEncoding(t *testing.T) {
 	_, i := utf8.DecodeRuneInString(cert)
 	invalidCert := cert[i:]
 	// A TestGatewayService resource with metadata and spec.
-	certificate := &appv1alpha1.GatewayService{
+	gatewayservice := &appv1alpha1.GatewayService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -571,11 +571,11 @@ func TestIncorrectCertAndKeyEncoding(t *testing.T) {
 	gateway := &networkv3.Gateway{}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificate}
+	objs := []runtime.Object{gatewayservice}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -600,8 +600,8 @@ func TestIncorrectCertAndKeyEncoding(t *testing.T) {
 		t.Error("reconcile did not requeue request as expected")
 	}
 	// Check if certificates has been created.
-	certificate = &appv1alpha1.GatewayService{}
-	err = r.client.Get(context.TODO(), req.NamespacedName, certificate)
+	gatewayservice = &appv1alpha1.GatewayService{}
+	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
 		t.Fatalf("get GatewayService: (%v)", err)
 	}
@@ -609,7 +609,7 @@ func TestIncorrectCertAndKeyEncoding(t *testing.T) {
 
 func TestGatewayServiceControllerReconciler_Simple(t *testing.T) {
 	// A TestGatewayService resource with metadata and spec.
-	certificate := &appv1alpha1.GatewayService{
+	gatewayservice := &appv1alpha1.GatewayService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -653,14 +653,14 @@ func TestGatewayServiceControllerReconciler_Simple(t *testing.T) {
 	}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificate, gateway}
+	objs := []runtime.Object{gatewayservice, gateway}
 
 	// List ANZCertificate objects filtering by labels
 	certificatesList := &appv1alpha1.GatewayServiceList{}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate, certificatesList)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice, certificatesList)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -685,8 +685,8 @@ func TestGatewayServiceControllerReconciler_Simple(t *testing.T) {
 		t.Error("reconcile did not requeue request as expected")
 	}
 	// Check if certificates has been created.
-	certificate = &appv1alpha1.GatewayService{}
-	err = r.client.Get(context.TODO(), req.NamespacedName, certificate)
+	gatewayservice = &appv1alpha1.GatewayService{}
+	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
 		t.Fatalf("get GatewayService: (%v)", err)
 	}
@@ -694,7 +694,7 @@ func TestGatewayServiceControllerReconciler_Simple(t *testing.T) {
 
 func TestGatewayServiceControllerReconciler_Passthrough(t *testing.T) {
 	// A TestGatewayService resource with metadata and spec.
-	certificate := &appv1alpha1.GatewayService{
+	gatewayservice := &appv1alpha1.GatewayService{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
@@ -717,11 +717,11 @@ func TestGatewayServiceControllerReconciler_Passthrough(t *testing.T) {
 	gateway := &networkv3.Gateway{}
 
 	// Objects to track in the fake client.
-	objs := []runtime.Object{certificate}
+	objs := []runtime.Object{gatewayservice}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, certificate)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -746,8 +746,8 @@ func TestGatewayServiceControllerReconciler_Passthrough(t *testing.T) {
 		t.Error("reconcile did not requeue request as expected")
 	}
 	// Check if certificates has been created.
-	certificate = &appv1alpha1.GatewayService{}
-	err = r.client.Get(context.TODO(), req.NamespacedName, certificate)
+	gatewayservice = &appv1alpha1.GatewayService{}
+	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
 		t.Fatalf("get GatewayService: (%v)", err)
 	}
