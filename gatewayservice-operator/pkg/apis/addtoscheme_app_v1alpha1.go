@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
+	"github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 	"knative.dev/pkg/apis/istio/v1alpha3"
 )
 

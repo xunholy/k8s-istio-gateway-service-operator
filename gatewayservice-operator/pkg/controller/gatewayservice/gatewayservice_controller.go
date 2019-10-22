@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/gateway"
-	"github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/secret"
-	"github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/status"
-	"github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/validate"
+	"github.com/xunholy/k8s-istio-gateway-service-operator/internal/pkg/gateway"
+	"github.com/xunholy/k8s-istio-gateway-service-operator/internal/pkg/secret"
+	"github.com/xunholy/k8s-istio-gateway-service-operator/internal/pkg/status"
+	"github.com/xunholy/k8s-istio-gateway-service-operator/internal/pkg/validate"
 
 	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
 	// networkv3 "istio.io/api/networking/v1alpha3"
 
-	appv1alpha1 "github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
+	appv1alpha1 "github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/fields"
@@ -111,10 +111,9 @@ func (r *ReconcileGatewayService) Reconcile(request reconcile.Request) (reconcil
 		return reconcile.Result{Requeue: true}, err
 	}
 
-	logger.Info("Reconcile Secret object.", "gatewayservice.Spec.Mode", gatewayservice.Spec.Mode)
 	err = r.ReconcileSecret(request, gatewayservice)
 	if err != nil {
-		logger.Error(err, "Failed to process secret request. Requeue")
+		logger.Error(err, "Failed to process secret request. Requeue", "gatewayservice.Spec.Mode", gatewayservice.Spec.Mode)
 		statusErr := r.ReconcileCRDStatus(request, gatewayservice, err)
 		if statusErr != nil {
 			logger.Error(statusErr, "Failed to update CRD status. Requeue")
@@ -122,10 +121,9 @@ func (r *ReconcileGatewayService) Reconcile(request reconcile.Request) (reconcil
 		return reconcile.Result{Requeue: true}, err
 	}
 
-	logger.Info("Reconcile Gateway object.", "gatewayservice.Spec.TrafficType", gatewayservice.Spec.TrafficType)
 	err = r.ReconcileGateway(request, gatewayservice, gatewayservice.Spec.TrafficType)
 	if err != nil {
-		logger.Error(err, "Failed to process gateway request. Requeue")
+		logger.Error(err, "Failed to process gateway request. Requeue", "gatewayservice.Spec.TrafficType", gatewayservice.Spec.TrafficType)
 		statusErr := r.ReconcileCRDStatus(request, gatewayservice, err)
 		if statusErr != nil {
 			logger.Error(statusErr, "Failed to update CRD status. Requeue")
@@ -135,7 +133,7 @@ func (r *ReconcileGatewayService) Reconcile(request reconcile.Request) (reconcil
 
 	err = r.ReconcileCRDStatus(request, gatewayservice, nil)
 	if err != nil {
-		logger.Error(err, "Failed to update CRD status after completion. Requeue")
+		logger.Error(err, "Failed to update CRD status after successful completion. Requeue")
 	}
 	return reconcile.Result{Requeue: true}, nil
 }

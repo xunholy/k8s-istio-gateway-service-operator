@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	g "github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/gateway"
-	appv1alpha1 "github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
+	g "github.com/xunholy/k8s-istio-gateway-service-operator/internal/pkg/gateway"
+	appv1alpha1 "github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	networkv3 "knative.dev/pkg/apis/istio/v1alpha3"
 )

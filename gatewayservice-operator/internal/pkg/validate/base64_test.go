@@ -4,8 +4,8 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/validate"
-	"github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
+	"github.com/xunholy/k8s-istio-gateway-service-operator/internal/pkg/validate"
+	"github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 )
 
 var (
