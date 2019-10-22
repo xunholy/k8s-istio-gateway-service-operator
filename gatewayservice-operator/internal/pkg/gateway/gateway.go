@@ -22,6 +22,7 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 	// Create empty server stanza array
 	servers := []networkv3.Server{}
 	// Add all gatewayservice server entries into servers array
+
 	for _, gatewayservice := range g.GatewayService.Items {
 
 		// Secrets will be default to using Kubernetes secret objects leveraging SDS
