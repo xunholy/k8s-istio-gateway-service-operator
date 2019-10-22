@@ -225,10 +225,10 @@ func (r *ReconcileGatewayService) ReconcileSecret(request reconcile.Request, gat
 					return fmt.Errorf("cert and/or key are not base64 encoded")
 				}
 				s := secret.SecretConfig{
-					Name:        fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
-					Namespace:   secretNamespace(gatewayservice),
-					Labels:      map[string]string{"Namespace": request.Namespace},
-					Certificate: gatewayservice,
+					Name:           fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
+					Namespace:      secretNamespace(gatewayservice),
+					Labels:         map[string]string{"Namespace": request.Namespace},
+					GatewayService: gatewayservice,
 				}
 				reconciledSecretObj := secret.Reconcile(s)
 
@@ -256,10 +256,11 @@ func (r *ReconcileGatewayService) validation(request reconcile.Request, gateways
 	}
 	if gatewayservice.Spec.TLSOptions.TLSSecretRef != nil {
 		secret := &corev1.Secret{}
-		err := r.client.Get(context.TODO(), types.NamespacedName{Name: gatewayservice.Spec.TLSOptions.TLSSecretRef.SecretName, Namespace: secretNamespace(gatewayservice)}, secret)
+		key := types.NamespacedName{Name: gatewayservice.Spec.TLSOptions.TLSSecretRef.SecretName, Namespace: secretNamespace(gatewayservice)}
+		err := r.client.Get(context.TODO(), key, secret)
 		if err != nil {
 			if errors.IsNotFound(err) {
-				return fmt.Errorf("reference to secret %v in namespace %v does not exist", secret, secretNamespace(gatewayservice))
+				return fmt.Errorf("reference to secret %v in namespace %v does not exist -- NAME %v", secret, secretNamespace(gatewayservice), gatewayservice.Spec.TLSOptions.TLSSecretRef.SecretName)
 			}
 			return err
 		}

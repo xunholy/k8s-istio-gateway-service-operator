@@ -46,10 +46,10 @@ func TestSecretReconcile(t *testing.T) {
 		Type: "kubernetes.io/tls",
 	}
 	secretConfig := s.SecretConfig{
-		Name:        fmt.Sprintf("%s-%s-secret", name, namespace),
-		Namespace:   namespace,
-		Labels:      map[string]string{"Namespace": namespace},
-		Certificate: gatewayservice,
+		Name:           fmt.Sprintf("%s-%s-secret", name, namespace),
+		Namespace:      namespace,
+		Labels:         map[string]string{"Namespace": namespace},
+		GatewayService: gatewayservice,
 	}
 	secretObject := s.Reconcile(secretConfig)
 	if !reflect.DeepEqual(secretObject, expected) {
