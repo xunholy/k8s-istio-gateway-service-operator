@@ -54,7 +54,7 @@ rules:
     verbs:
       - get
   - apiGroups:
-      - gatewayservice.app.example.com
+      - crd.xunholy.github.com
     resources:
       - '*'
     verbs:
