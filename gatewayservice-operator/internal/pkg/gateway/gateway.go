@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	appv1alpha1 "github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
+	appv1alpha1 "github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 
 	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
 	// networkv3 "istio.io/api/networking/v1alpha3"
@@ -12,17 +12,18 @@ import (
 )
 
 type GatewayConfig struct {
-	Name         string
-	TrafficType  string
-	Certificates *appv1alpha1.GatewayServiceList
-	Gateway      *networkv3.Gateway
+	Name           string
+	TrafficType    string
+	GatewayService *appv1alpha1.GatewayServiceList
+	Gateway        *networkv3.Gateway
 }
 
 func Reconcile(g GatewayConfig) *networkv3.Gateway {
 	// Create empty server stanza array
 	servers := []networkv3.Server{}
 	// Add all gatewayservice server entries into servers array
-	for _, gatewayservice := range g.Certificates.Items {
+
+	for _, gatewayservice := range g.GatewayService.Items {
 
 		// Secrets will be default to using Kubernetes secret objects leveraging SDS
 		secretRef := &networkv3.TLSOptions{}

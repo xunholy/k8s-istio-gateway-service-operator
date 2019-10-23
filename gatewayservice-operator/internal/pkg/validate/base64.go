@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
+	"github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 )
 
 func checkBase64(data string) bool {

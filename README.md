@@ -1,5 +1,5 @@
-![Build](https://github.com/xUnholy/k8s-istio-certificate-operator/workflows/Build%20And%20Push/badge.svg)
-![Test](https://github.com/xUnholy/k8s-istio-certificate-operator/workflows/Unit%20Test/badge.svg)
+![Build](https://github.com/xUnholy/k8s-istio-gateway-service-operator/workflows/Build%20And%20Push/badge.svg)
+![Test](https://github.com/xUnholy/k8s-istio-gateway-service-operator/workflows/Unit%20Test/badge.svg)
 
 # Gateway Service Operator
 
@@ -127,6 +127,9 @@ docker push xunholy/k8s-operator:latest
 ```
 
 Update the [operator.yaml](gatewayservice-operator/deploy/operator.yaml) manifest to use the built image name.
+
+Note: If you do **NOT** have a ingress and/or egress gateway object the following CRD's will not work as expected.
+To deploy a Gateway object please review [gateway.yaml](gatewayservice-operator/example/gateway.yaml) as an example.
 
 Deploy CRDs to a Kubernetes cluster to extend the API server and create the required objects
 

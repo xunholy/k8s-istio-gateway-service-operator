@@ -4,15 +4,15 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/gateway"
-	"github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/secret"
-	"github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/status"
-	"github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/validate"
+	"github.com/xunholy/k8s-istio-gateway-service-operator/internal/pkg/gateway"
+	"github.com/xunholy/k8s-istio-gateway-service-operator/internal/pkg/secret"
+	"github.com/xunholy/k8s-istio-gateway-service-operator/internal/pkg/status"
+	"github.com/xunholy/k8s-istio-gateway-service-operator/internal/pkg/validate"
 
 	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
 	// networkv3 "istio.io/api/networking/v1alpha3"
 
-	appv1alpha1 "github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
+	appv1alpha1 "github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/fields"
@@ -111,10 +111,9 @@ func (r *ReconcileGatewayService) Reconcile(request reconcile.Request) (reconcil
 		return reconcile.Result{Requeue: true}, err
 	}
 
-	logger.Info("Reconcile Secret object.", "gatewayservice.Spec.Mode", gatewayservice.Spec.Mode)
 	err = r.ReconcileSecret(request, gatewayservice)
 	if err != nil {
-		logger.Error(err, "Failed to process secret request. Requeue")
+		logger.Error(err, "Failed to process secret request. Requeue", "gatewayservice.Spec.Mode", gatewayservice.Spec.Mode)
 		statusErr := r.ReconcileCRDStatus(request, gatewayservice, err)
 		if statusErr != nil {
 			logger.Error(statusErr, "Failed to update CRD status. Requeue")
@@ -122,10 +121,9 @@ func (r *ReconcileGatewayService) Reconcile(request reconcile.Request) (reconcil
 		return reconcile.Result{Requeue: true}, err
 	}
 
-	logger.Info("Reconcile Gateway object.", "gatewayservice.Spec.TrafficType", gatewayservice.Spec.TrafficType)
 	err = r.ReconcileGateway(request, gatewayservice, gatewayservice.Spec.TrafficType)
 	if err != nil {
-		logger.Error(err, "Failed to process gateway request. Requeue")
+		logger.Error(err, "Failed to process gateway request. Requeue", "gatewayservice.Spec.TrafficType", gatewayservice.Spec.TrafficType)
 		statusErr := r.ReconcileCRDStatus(request, gatewayservice, err)
 		if statusErr != nil {
 			logger.Error(statusErr, "Failed to update CRD status. Requeue")
@@ -135,7 +133,7 @@ func (r *ReconcileGatewayService) Reconcile(request reconcile.Request) (reconcil
 
 	err = r.ReconcileCRDStatus(request, gatewayservice, nil)
 	if err != nil {
-		logger.Error(err, "Failed to update CRD status after completion. Requeue")
+		logger.Error(err, "Failed to update CRD status after successful completion. Requeue")
 	}
 	return reconcile.Result{Requeue: true}, nil
 }
@@ -203,10 +201,10 @@ func (r *ReconcileGatewayService) ReconcileGateway(request reconcile.Request, ga
 	}
 
 	g := gateway.GatewayConfig{
-		Name:         fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType),
-		TrafficType:  trafficType,
-		Certificates: gatewayservices,
-		Gateway:      gatewayObj,
+		Name:           fmt.Sprintf("%s-%s-gateway", request.Namespace, trafficType),
+		TrafficType:    trafficType,
+		GatewayService: gatewayservices,
+		Gateway:        gatewayObj,
 	}
 	reconciledGatewayObj := gateway.Reconcile(g)
 	return r.client.Update(context.TODO(), reconciledGatewayObj)
@@ -227,10 +225,10 @@ func (r *ReconcileGatewayService) ReconcileSecret(request reconcile.Request, gat
 					return fmt.Errorf("cert and/or key are not base64 encoded")
 				}
 				s := secret.SecretConfig{
-					Name:        fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
-					Namespace:   secretNamespace(gatewayservice),
-					Labels:      map[string]string{"Namespace": request.Namespace},
-					Certificate: gatewayservice,
+					Name:           fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
+					Namespace:      secretNamespace(gatewayservice),
+					Labels:         map[string]string{"Namespace": request.Namespace},
+					GatewayService: gatewayservice,
 				}
 				reconciledSecretObj := secret.Reconcile(s)
 
@@ -258,10 +256,11 @@ func (r *ReconcileGatewayService) validation(request reconcile.Request, gateways
 	}
 	if gatewayservice.Spec.TLSOptions.TLSSecretRef != nil {
 		secret := &corev1.Secret{}
-		err := r.client.Get(context.TODO(), types.NamespacedName{Name: gatewayservice.Spec.TLSOptions.TLSSecretRef.SecretName, Namespace: secretNamespace(gatewayservice)}, secret)
+		key := types.NamespacedName{Name: gatewayservice.Spec.TLSOptions.TLSSecretRef.SecretName, Namespace: secretNamespace(gatewayservice)}
+		err := r.client.Get(context.TODO(), key, secret)
 		if err != nil {
 			if errors.IsNotFound(err) {
-				return fmt.Errorf("reference to secret %v in namespace %v does not exist", secret, secretNamespace(gatewayservice))
+				return fmt.Errorf("reference to secret %v in namespace %v does not exist -- NAME %v", secret, secretNamespace(gatewayservice), gatewayservice.Spec.TLSOptions.TLSSecretRef.SecretName)
 			}
 			return err
 		}

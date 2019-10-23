@@ -11,11 +11,11 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 
-	appv1alpha1 "github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
+	appv1alpha1 "github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 
-	"github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis"
-	"github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/controller"
+	"github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis"
+	"github.com/xunholy/k8s-istio-gateway-service-operator/pkg/controller"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
 	kubemetrics "github.com/operator-framework/operator-sdk/pkg/kube-metrics"

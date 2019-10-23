@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	g "github.com/xUnholy/k8s-istio-gateway-service-operator/internal/pkg/gateway"
-	appv1alpha1 "github.com/xUnholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
+	g "github.com/xunholy/k8s-istio-gateway-service-operator/internal/pkg/gateway"
+	appv1alpha1 "github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	networkv3 "knative.dev/pkg/apis/istio/v1alpha3"
 )
@@ -37,10 +37,10 @@ func TestGatewayReconcile_Default(t *testing.T) {
 		},
 	}
 	gatewayConfig := g.GatewayConfig{
-		Name:         fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
-		TrafficType:  trafficType,
-		Certificates: certificatesList,
-		Gateway:      gateway,
+		Name:           fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
+		TrafficType:    trafficType,
+		GatewayService: certificatesList,
+		Gateway:        gateway,
 	}
 	gatewayObject := g.Reconcile(gatewayConfig)
 	if !reflect.DeepEqual(gatewayObject, expected) {
@@ -92,10 +92,10 @@ func TestGatewayReconcile_TLSSecret(t *testing.T) {
 		},
 	}
 	gatewayConfig := g.GatewayConfig{
-		Name:         fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
-		TrafficType:  trafficType,
-		Certificates: certificatesList,
-		Gateway:      gateway,
+		Name:           fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
+		TrafficType:    trafficType,
+		GatewayService: certificatesList,
+		Gateway:        gateway,
 	}
 	gatewayObject := g.Reconcile(gatewayConfig)
 	if !reflect.DeepEqual(gatewayObject, expected) {
@@ -148,10 +148,10 @@ func TestGatewayReconcile_TLSSecretPath(t *testing.T) {
 		},
 	}
 	gatewayConfig := g.GatewayConfig{
-		Name:         fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
-		TrafficType:  trafficType,
-		Certificates: certificatesList,
-		Gateway:      gateway,
+		Name:           fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
+		TrafficType:    trafficType,
+		GatewayService: certificatesList,
+		Gateway:        gateway,
 	}
 	gatewayObject := g.Reconcile(gatewayConfig)
 	if !reflect.DeepEqual(gatewayObject, expected) {
@@ -202,10 +202,10 @@ func TestGatewayReconcile_TLSSecretRef(t *testing.T) {
 		},
 	}
 	gatewayConfig := g.GatewayConfig{
-		Name:         fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
-		TrafficType:  trafficType,
-		Certificates: certificatesList,
-		Gateway:      gateway,
+		Name:           fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
+		TrafficType:    trafficType,
+		GatewayService: certificatesList,
+		Gateway:        gateway,
 	}
 	gatewayObject := g.Reconcile(gatewayConfig)
 	if !reflect.DeepEqual(gatewayObject, expected) {
