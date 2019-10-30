@@ -219,7 +219,7 @@ func (r *ReconcileGatewayService) ReconcileSecret(request reconcile.Request, gat
 			return fmt.Errorf("cert and/or key cannot be nil")
 		}
 		secretObj := &corev1.Secret{}
-		key := types.NamespacedName{Name: fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace), Namespace: request.Namespace}
+		key := types.NamespacedName{Name: fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace), Namespace: secretNamespace(gatewayservice)}
 		err := r.client.Get(context.TODO(), key, secretObj)
 		if err != nil {
 			if errors.IsNotFound(err) {
