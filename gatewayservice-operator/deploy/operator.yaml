@@ -31,3 +31,8 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: 'gatewayservice-operator'
+            - name: DOMAIN
+              valueFrom:
+                configMapKeyRef:
+                  name: gatewayservice-config
+                  key: DOMAIN

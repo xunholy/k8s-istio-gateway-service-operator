@@ -95,7 +95,7 @@ func schema_pkg_apis_crd_v1alpha1_GatewayServiceSpec(ref common.ReferenceCallbac
 					},
 					"protocol": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Options: HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP",
+							Description: "Options: HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP|TLS",
 							Type:        []string{"string"},
 							Format:      "",
 						},

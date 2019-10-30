@@ -50,7 +50,7 @@ spec:
               minimum: 1
               type: integer
             protocol:
-              description: 'Options: HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP'
+              description: 'Options: HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP|TLS'
               enum:
               - HTTP
               - HTTPS
@@ -58,6 +58,7 @@ spec:
               - HTTP2
               - MONGO
               - TCP
+              - TLS
               type: string
             tlsOptions:
               description: 'Options: TLSSecret|TLSSecretRef|TLSSecretPath Supports

@@ -16,6 +16,7 @@ type GatewayConfig struct {
 	TrafficType    string
 	GatewayService *appv1alpha1.GatewayServiceList
 	Gateway        *networkv3.Gateway
+	Domain         string
 }
 
 func Reconcile(g GatewayConfig) *networkv3.Gateway {
@@ -83,6 +84,15 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 				Mode: gatewayservice.Spec.Mode,
 			}
 		}
+		if gatewayservice.Spec.Mode == networkv3.TLSModePassThrough {
+			// If TLSMode is set to PASSTHROUGH there should be no TLSOption enforcement.
+			secretRef = &networkv3.TLSOptions{
+				// Optional: Indicates whether connections to this port should be
+				// secured using TLS. The value of this field determines how TLS is
+				// enforced.
+				Mode: gatewayservice.Spec.Mode,
+			}
+		}
 		servers = append(servers, networkv3.Server{
 			// REQUIRED: The Port on which the proxy should listen for incoming
 			// connections
@@ -94,7 +104,7 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 				Number: gatewayservice.Spec.Port,
 
 				// REQUIRED: The protocol exposed on the port.
-				// MUST BE one of HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP.
+				// MUST BE one of HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP|TLS.
 				Protocol: gatewayservice.Spec.Protocol,
 			},
 
@@ -116,13 +126,13 @@ func Reconcile(g GatewayConfig) *networkv3.Gateway {
 		})
 	}
 	if len(servers) == 0 {
-		servers = append(servers, defaultServer())
+		servers = append(servers, defaultServer(g))
 	}
 	g.Gateway.Spec.Servers = servers
 	return g.Gateway
 }
 
-func defaultServer() networkv3.Server {
+func defaultServer(g GatewayConfig) networkv3.Server {
 	return networkv3.Server{
 		Port: networkv3.Port{
 			Name:     "http-default",
@@ -131,6 +141,6 @@ func defaultServer() networkv3.Server {
 		},
 		// TODO: Hosts should not be wildcard as this may impact other Gateway objects.
 		// Should consider some way to derrive a DNS or identifier to limit scope.
-		Hosts: []string{"*"},
+		Hosts: []string{fmt.Sprintf("%s.%s", g.Gateway.ObjectMeta.Namespace, g.Domain)},
 	}
 }

@@ -3,6 +3,7 @@ package gatewayservice
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/xunholy/k8s-istio-gateway-service-operator/internal/pkg/gateway"
 	"github.com/xunholy/k8s-istio-gateway-service-operator/internal/pkg/secret"
@@ -32,8 +33,9 @@ import (
 
 var (
 	// blank assignment to verify that ReconcileGatewayService implements reconcile.Reconciler
-	_   reconcile.Reconciler = &ReconcileGatewayService{}
-	log                      = logf.Log.WithName("controller_gatewayservice")
+	_      reconcile.Reconciler = &ReconcileGatewayService{}
+	log                         = logf.Log.WithName("controller_gatewayservice")
+	domain                      = os.Getenv("DOMAIN")
 )
 
 type ReconcileGatewayService struct {
@@ -205,6 +207,7 @@ func (r *ReconcileGatewayService) ReconcileGateway(request reconcile.Request, ga
 		TrafficType:    trafficType,
 		GatewayService: gatewayservices,
 		Gateway:        gatewayObj,
+		Domain:         domain,
 	}
 	reconciledGatewayObj := gateway.Reconcile(g)
 	return r.client.Update(context.TODO(), reconciledGatewayObj)

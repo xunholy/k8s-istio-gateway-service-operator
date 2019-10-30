@@ -25,8 +25,8 @@ type GatewayServiceSpec struct {
 	// +kubebuilder:validation:Enum=SIMPLE,PASSTHROUGH,MUTUAL
 	Mode networkv3.TLSMode `json:"mode"`
 
-	// Options: HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP
-	// +kubebuilder:validation:Enum=HTTP,HTTPS,GRPC,HTTP2,MONGO,TCP
+	// Options: HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP|TLS
+	// +kubebuilder:validation:Enum=HTTP,HTTPS,GRPC,HTTP2,MONGO,TCP,TLS
 	Protocol networkv3.PortProtocol `json:"protocol"`
 
 	// Options: "ingress" or "egress"
