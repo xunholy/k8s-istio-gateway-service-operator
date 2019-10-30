@@ -35,7 +35,7 @@ var (
 	// blank assignment to verify that ReconcileGatewayService implements reconcile.Reconciler
 	_      reconcile.Reconciler = &ReconcileGatewayService{}
 	log                         = logf.Log.WithName("controller_gatewayservice")
-	domain                      = os.Getenv("DOMAIN")
+	domain                      = getEnv("DOMAIN", "example.com")
 )
 
 type ReconcileGatewayService struct {
@@ -214,39 +214,41 @@ func (r *ReconcileGatewayService) ReconcileGateway(request reconcile.Request, ga
 }
 
 func (r *ReconcileGatewayService) ReconcileSecret(request reconcile.Request, gatewayservice *appv1alpha1.GatewayService) error {
-	if gatewayservice.Spec.TLSOptions.TLSSecret != nil {
-		if gatewayservice.Spec.TLSOptions.TLSSecret.Cert == nil || gatewayservice.Spec.TLSOptions.TLSSecret.Key == nil {
-			return fmt.Errorf("cert and/or key cannot be nil")
-		}
-		secretObj := &corev1.Secret{}
-		key := types.NamespacedName{Name: fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace), Namespace: secretNamespace(gatewayservice)}
-		err := r.client.Get(context.TODO(), key, secretObj)
-		if err != nil {
-			if errors.IsNotFound(err) {
-				err := validate.ValidateSecretEncoding(*gatewayservice.Spec.TLSOptions.TLSSecret)
-				if err != nil {
-					return fmt.Errorf("cert and/or key are not base64 encoded")
-				}
-				s := secret.SecretConfig{
-					Name:           fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
-					Namespace:      secretNamespace(gatewayservice),
-					Labels:         map[string]string{"Namespace": request.Namespace},
-					GatewayService: gatewayservice,
-				}
-				reconciledSecretObj := secret.Reconcile(s)
-
-				// SetControllerReference sets owner as a Controller OwnerReference on owned.
-				// This is used for garbage collection of the owned object and for
-				// reconciling the owner object on changes to owned (with a Watch + EnqueueRequestForOwner).
-				// Since only one OwnerReference can be a controller, it returns an error if
-				// there is another OwnerReference with Controller flag set.
-				err = controllerutil.SetControllerReference(gatewayservice, reconciledSecretObj, r.scheme)
-				if err != nil {
-					return err
-				}
-				return r.client.Create(context.TODO(), reconciledSecretObj)
+	if gatewayservice.Spec.TLSOptions != nil {
+		if gatewayservice.Spec.TLSOptions.TLSSecret != nil {
+			if gatewayservice.Spec.TLSOptions.TLSSecret.Cert == nil || gatewayservice.Spec.TLSOptions.TLSSecret.Key == nil {
+				return fmt.Errorf("cert and/or key cannot be nil")
 			}
-			return err
+			secretObj := &corev1.Secret{}
+			key := types.NamespacedName{Name: fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace), Namespace: secretNamespace(gatewayservice)}
+			err := r.client.Get(context.TODO(), key, secretObj)
+			if err != nil {
+				if errors.IsNotFound(err) {
+					err := validate.ValidateSecretEncoding(*gatewayservice.Spec.TLSOptions.TLSSecret)
+					if err != nil {
+						return fmt.Errorf("cert and/or key are not base64 encoded")
+					}
+					s := secret.SecretConfig{
+						Name:           fmt.Sprintf("%s-%s-secret", request.Name, request.Namespace),
+						Namespace:      secretNamespace(gatewayservice),
+						Labels:         map[string]string{"Namespace": request.Namespace},
+						GatewayService: gatewayservice,
+					}
+					reconciledSecretObj := secret.Reconcile(s)
+
+					// SetControllerReference sets owner as a Controller OwnerReference on owned.
+					// This is used for garbage collection of the owned object and for
+					// reconciling the owner object on changes to owned (with a Watch + EnqueueRequestForOwner).
+					// Since only one OwnerReference can be a controller, it returns an error if
+					// there is another OwnerReference with Controller flag set.
+					err = controllerutil.SetControllerReference(gatewayservice, reconciledSecretObj, r.scheme)
+					if err != nil {
+						return err
+					}
+					return r.client.Create(context.TODO(), reconciledSecretObj)
+				}
+				return err
+			}
 		}
 	}
 	return nil
@@ -257,15 +259,17 @@ func (r *ReconcileGatewayService) validation(request reconcile.Request, gateways
 	if err != nil {
 		return err
 	}
-	if gatewayservice.Spec.TLSOptions.TLSSecretRef != nil {
-		secret := &corev1.Secret{}
-		key := types.NamespacedName{Name: gatewayservice.Spec.TLSOptions.TLSSecretRef.SecretName, Namespace: secretNamespace(gatewayservice)}
-		err := r.client.Get(context.TODO(), key, secret)
-		if err != nil {
-			if errors.IsNotFound(err) {
-				return fmt.Errorf("reference to secret %v in namespace %v does not exist -- NAME %v", secret, secretNamespace(gatewayservice), gatewayservice.Spec.TLSOptions.TLSSecretRef.SecretName)
+	if gatewayservice.Spec.Mode != networkv3.TLSModePassThrough {
+		if gatewayservice.Spec.TLSOptions.TLSSecretRef != nil {
+			secret := &corev1.Secret{}
+			key := types.NamespacedName{Name: gatewayservice.Spec.TLSOptions.TLSSecretRef.SecretName, Namespace: secretNamespace(gatewayservice)}
+			err := r.client.Get(context.TODO(), key, secret)
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return fmt.Errorf("reference to secret %v in namespace %v does not exist -- NAME %v", secret, secretNamespace(gatewayservice), gatewayservice.Spec.TLSOptions.TLSSecretRef.SecretName)
+				}
+				return err
 			}
-			return err
 		}
 	}
 	return nil
@@ -279,4 +283,11 @@ func secretNamespace(gs *appv1alpha1.GatewayService) string {
 	}
 	// Assume PASSTHROUGH has been declared
 	return gs.Namespace
+}
+
+func getEnv(k string, d string) string {
+	if v, e := os.LookupEnv(k); e {
+		return v
+	}
+	return d
 }

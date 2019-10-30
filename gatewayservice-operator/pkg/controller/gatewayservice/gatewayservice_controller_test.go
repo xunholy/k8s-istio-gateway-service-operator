@@ -87,7 +87,7 @@ func TestTLSSecretRefInvalidSecret(t *testing.T) {
 		},
 		Spec: appv1alpha1.GatewayServiceSpec{
 			Hosts:       []string{"*"},
-			Mode:        "PASSTHROUGH",
+			Mode:        "SIMPLE",
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
@@ -140,7 +140,7 @@ func TestNoTLSOption(t *testing.T) {
 		},
 		Spec: appv1alpha1.GatewayServiceSpec{
 			Hosts:       []string{"*"},
-			Mode:        "PASSTHROUGH",
+			Mode:        "SIMPLE",
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",
@@ -465,7 +465,7 @@ func TestCertAndKeyWithSecretRef(t *testing.T) {
 		},
 		Spec: appv1alpha1.GatewayServiceSpec{
 			Hosts:       []string{"*"},
-			Mode:        "PASSTHROUGH",
+			Mode:        "SIMPLE",
 			Port:        80,
 			Protocol:    "HTTPS",
 			TrafficType: "ingress",

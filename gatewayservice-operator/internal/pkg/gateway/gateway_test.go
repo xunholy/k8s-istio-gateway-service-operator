@@ -31,7 +31,7 @@ func TestGatewayReconcile_Default(t *testing.T) {
 						Number:   80,
 						Protocol: "HTTP",
 					},
-					Hosts: []string{"*"},
+					Hosts: []string{"."},
 				},
 			},
 		},
@@ -113,7 +113,7 @@ func TestGatewayReconcile_TLSSecretPath(t *testing.T) {
 				},
 				Spec: appv1alpha1.GatewayServiceSpec{
 					Hosts:       []string{"*"},
-					Mode:        "PASSTHROUGH",
+					Mode:        "SIMPLE",
 					Port:        80,
 					Protocol:    "HTTPS",
 					TrafficType: "ingress",
@@ -139,7 +139,7 @@ func TestGatewayReconcile_TLSSecretPath(t *testing.T) {
 					},
 					Hosts: []string{"*"},
 					TLS: &networkv3.TLSOptions{
-						Mode:              "PASSTHROUGH",
+						Mode:              "SIMPLE",
 						ServerCertificate: "/example/path/to/file",
 						PrivateKey:        "/example/path/to/file",
 					},
@@ -169,7 +169,7 @@ func TestGatewayReconcile_TLSSecretRef(t *testing.T) {
 				},
 				Spec: appv1alpha1.GatewayServiceSpec{
 					Hosts:       []string{"*"},
-					Mode:        "PASSTHROUGH",
+					Mode:        "SIMPLE",
 					Port:        80,
 					Protocol:    "HTTPS",
 					TrafficType: "ingress",
@@ -194,7 +194,7 @@ func TestGatewayReconcile_TLSSecretRef(t *testing.T) {
 					},
 					Hosts: []string{"*"},
 					TLS: &networkv3.TLSOptions{
-						Mode:           "PASSTHROUGH",
+						Mode:           "SIMPLE",
 						CredentialName: "example-secret",
 					},
 				},
