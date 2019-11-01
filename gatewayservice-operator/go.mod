@@ -2,15 +2,14 @@ module github.com/xunholy/k8s-istio-gateway-service-operator
 
 require (
 	github.com/go-openapi/spec v0.19.0
-	github.com/gogo/protobuf v1.2.2-0.20190730201129-28a6bbf47e48 // indirect
 	github.com/operator-framework/operator-sdk v0.10.1-0.20190912205659-c084b570a6af
 	github.com/spf13/pflag v1.0.3
-	google.golang.org/grpc v1.21.0 // indirect
+	istio.io/api v0.0.0-20191029012234-9fe6a7da3673
+	istio.io/client-go v0.0.0-20191024204624-13a7366c1cab
 	k8s.io/api v0.0.0-20190612125737-db0771252981
-	k8s.io/apimachinery v0.0.0-20190612125636-6a5db36e93ad
+	k8s.io/apimachinery v0.0.0-20191004115801-a2eda9f80ab8
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/kube-openapi v0.0.0-20190603182131-db7b694dc208
-	knative.dev/pkg v0.0.0-20190919022748-1fb9a433083f
 	sigs.k8s.io/controller-runtime v0.1.12
 	sigs.k8s.io/controller-tools v0.1.10
 )

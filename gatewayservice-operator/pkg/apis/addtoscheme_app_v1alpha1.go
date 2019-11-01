@@ -2,7 +2,8 @@ package apis
 
 import (
 	"github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
-	"knative.dev/pkg/apis/istio/v1alpha3"
+	// "knative.dev/pkg/apis/istio/v1alpha3"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 )
 
 func init() {

@@ -83,12 +83,12 @@ func schema_pkg_apis_crd_v1alpha1_GatewayServiceSpec(ref common.ReferenceCallbac
 					"port": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"integer"},
-							Format: "int32",
+							Format: "int64",
 						},
 					},
 					"mode": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Options: SIMPLE|PASSTHROUGH|MUTUAL",
+							Description: "Options: SIMPLE|PASSTHROUGH|MUTUAL|ISTIO_MUTUAL|AUTO_PASSTHROUGH",
 							Type:        []string{"string"},
 							Format:      "",
 						},

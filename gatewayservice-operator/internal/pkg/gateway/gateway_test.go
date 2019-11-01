@@ -7,8 +7,9 @@ import (
 
 	g "github.com/xunholy/k8s-istio-gateway-service-operator/internal/pkg/gateway"
 	appv1alpha1 "github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
+	networkv3 "istio.io/api/networking/v1alpha3"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	networkv3 "knative.dev/pkg/apis/istio/v1alpha3"
 )
 
 var (
@@ -20,14 +21,14 @@ var (
 )
 
 func TestGatewayReconcile_Default(t *testing.T) {
-	certificatesList := &appv1alpha1.GatewayServiceList{}
-	gateway := &networkv3.Gateway{}
-	expected := &networkv3.Gateway{
-		Spec: networkv3.GatewaySpec{
-			Servers: []networkv3.Server{
+	gatewayserviceList := &appv1alpha1.GatewayServiceList{}
+	gateway := &v1alpha3.Gateway{}
+	expected := &v1alpha3.Gateway{
+		Spec: networkv3.Gateway{
+			Servers: []*networkv3.Server{
 				{
-					Port: networkv3.Port{
-						Name:     "http-default",
+					Port: &networkv3.Port{
+						Name:     "http-",
 						Number:   80,
 						Protocol: "HTTP",
 					},
@@ -39,7 +40,7 @@ func TestGatewayReconcile_Default(t *testing.T) {
 	gatewayConfig := g.GatewayConfig{
 		Name:           fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
 		TrafficType:    trafficType,
-		GatewayService: certificatesList,
+		GatewayService: gatewayserviceList,
 		Gateway:        gateway,
 	}
 	gatewayObject := g.Reconcile(gatewayConfig)
@@ -48,8 +49,8 @@ func TestGatewayReconcile_Default(t *testing.T) {
 	}
 }
 
-func TestGatewayReconcile_TLSSecret(t *testing.T) {
-	certificatesList := &appv1alpha1.GatewayServiceList{
+func TestGatewayReconcile_TLSSecret_PASSTHROUGH(t *testing.T) {
+	gatewayserviceList := &appv1alpha1.GatewayServiceList{
 		Items: []appv1alpha1.GatewayService{
 			{
 				ObjectMeta: metav1.ObjectMeta{
@@ -72,19 +73,18 @@ func TestGatewayReconcile_TLSSecret(t *testing.T) {
 			},
 		},
 	}
-	gateway := &networkv3.Gateway{}
-	expected := &networkv3.Gateway{
-		Spec: networkv3.GatewaySpec{
-			Servers: []networkv3.Server{
+	gateway := &v1alpha3.Gateway{}
+	expected := &v1alpha3.Gateway{
+		Spec: networkv3.Gateway{
+			Servers: []*networkv3.Server{
 				{
-					Port: networkv3.Port{
+					Port: &networkv3.Port{
 						Name:     "https-example-app-application",
 						Number:   80,
 						Protocol: "HTTPS",
 					},
 					Hosts: []string{"*"},
-					TLS: &networkv3.TLSOptions{
-						Mode:           "PASSTHROUGH",
+					Tls: &networkv3.Server_TLSOptions{
 						CredentialName: "example-app-application-secret",
 					},
 				},
@@ -94,7 +94,61 @@ func TestGatewayReconcile_TLSSecret(t *testing.T) {
 	gatewayConfig := g.GatewayConfig{
 		Name:           fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
 		TrafficType:    trafficType,
-		GatewayService: certificatesList,
+		GatewayService: gatewayserviceList,
+		Gateway:        gateway,
+	}
+	gatewayObject := g.Reconcile(gatewayConfig)
+	if !reflect.DeepEqual(gatewayObject, expected) {
+		t.Fatalf("Expected: (%+v) \n Found: (%+v)", expected, gatewayObject)
+	}
+}
+
+func TestGatewayReconcile_TLSSecret_SIMPLE(t *testing.T) {
+	gatewayserviceList := &appv1alpha1.GatewayServiceList{
+		Items: []appv1alpha1.GatewayService{
+			{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      name,
+					Namespace: namespace,
+				},
+				Spec: appv1alpha1.GatewayServiceSpec{
+					Hosts:       []string{"*"},
+					Mode:        "SIMPLE",
+					Port:        80,
+					Protocol:    "HTTPS",
+					TrafficType: "ingress",
+					TLSOptions: &appv1alpha1.TLSOptions{
+						TLSSecret: &appv1alpha1.TLSSecret{
+							Cert: &cert,
+							Key:  &key,
+						},
+					},
+				},
+			},
+		},
+	}
+	gateway := &v1alpha3.Gateway{}
+	expected := &v1alpha3.Gateway{
+		Spec: networkv3.Gateway{
+			Servers: []*networkv3.Server{
+				{
+					Port: &networkv3.Port{
+						Name:     "https-example-app-application",
+						Number:   80,
+						Protocol: "HTTPS",
+					},
+					Hosts: []string{"*"},
+					Tls: &networkv3.Server_TLSOptions{
+						CredentialName: "example-app-application-secret",
+					},
+				},
+			},
+		},
+	}
+	gatewayConfig := g.GatewayConfig{
+		Name:           fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
+		TrafficType:    trafficType,
+		GatewayService: gatewayserviceList,
 		Gateway:        gateway,
 	}
 	gatewayObject := g.Reconcile(gatewayConfig)
@@ -104,7 +158,7 @@ func TestGatewayReconcile_TLSSecret(t *testing.T) {
 }
 
 func TestGatewayReconcile_TLSSecretPath(t *testing.T) {
-	certificatesList := &appv1alpha1.GatewayServiceList{
+	gatewayserviceList := &appv1alpha1.GatewayServiceList{
 		Items: []appv1alpha1.GatewayService{
 			{
 				ObjectMeta: metav1.ObjectMeta{
@@ -127,19 +181,18 @@ func TestGatewayReconcile_TLSSecretPath(t *testing.T) {
 			},
 		},
 	}
-	gateway := &networkv3.Gateway{}
-	expected := &networkv3.Gateway{
-		Spec: networkv3.GatewaySpec{
-			Servers: []networkv3.Server{
+	gateway := &v1alpha3.Gateway{}
+	expected := &v1alpha3.Gateway{
+		Spec: networkv3.Gateway{
+			Servers: []*networkv3.Server{
 				{
-					Port: networkv3.Port{
+					Port: &networkv3.Port{
 						Name:     "https-example-app-application",
 						Number:   80,
 						Protocol: "HTTPS",
 					},
 					Hosts: []string{"*"},
-					TLS: &networkv3.TLSOptions{
-						Mode:              "SIMPLE",
+					Tls: &networkv3.Server_TLSOptions{
 						ServerCertificate: "/example/path/to/file",
 						PrivateKey:        "/example/path/to/file",
 					},
@@ -150,7 +203,7 @@ func TestGatewayReconcile_TLSSecretPath(t *testing.T) {
 	gatewayConfig := g.GatewayConfig{
 		Name:           fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
 		TrafficType:    trafficType,
-		GatewayService: certificatesList,
+		GatewayService: gatewayserviceList,
 		Gateway:        gateway,
 	}
 	gatewayObject := g.Reconcile(gatewayConfig)
@@ -160,7 +213,7 @@ func TestGatewayReconcile_TLSSecretPath(t *testing.T) {
 }
 
 func TestGatewayReconcile_TLSSecretRef(t *testing.T) {
-	certificatesList := &appv1alpha1.GatewayServiceList{
+	gatewayserviceList := &appv1alpha1.GatewayServiceList{
 		Items: []appv1alpha1.GatewayService{
 			{
 				ObjectMeta: metav1.ObjectMeta{
@@ -182,19 +235,18 @@ func TestGatewayReconcile_TLSSecretRef(t *testing.T) {
 			},
 		},
 	}
-	gateway := &networkv3.Gateway{}
-	expected := &networkv3.Gateway{
-		Spec: networkv3.GatewaySpec{
-			Servers: []networkv3.Server{
+	gateway := &v1alpha3.Gateway{}
+	expected := &v1alpha3.Gateway{
+		Spec: networkv3.Gateway{
+			Servers: []*networkv3.Server{
 				{
-					Port: networkv3.Port{
+					Port: &networkv3.Port{
 						Name:     "https-example-app-application",
 						Number:   80,
 						Protocol: "HTTPS",
 					},
 					Hosts: []string{"*"},
-					TLS: &networkv3.TLSOptions{
-						Mode:           "SIMPLE",
+					Tls: &networkv3.Server_TLSOptions{
 						CredentialName: "example-secret",
 					},
 				},
@@ -204,7 +256,7 @@ func TestGatewayReconcile_TLSSecretRef(t *testing.T) {
 	gatewayConfig := g.GatewayConfig{
 		Name:           fmt.Sprintf("%s-%s-gateway", namespace, trafficType),
 		TrafficType:    trafficType,
-		GatewayService: certificatesList,
+		GatewayService: gatewayserviceList,
 		Gateway:        gateway,
 	}
 	gatewayObject := g.Reconcile(gatewayConfig)

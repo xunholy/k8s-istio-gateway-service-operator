@@ -9,9 +9,8 @@ import (
 	appv1alpha1 "github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 	"k8s.io/client-go/kubernetes/scheme"
 
-	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
-	// networkv3 "istio.io/api/networking/v1alpha3"
-	networkv3 "knative.dev/pkg/apis/istio/v1alpha3"
+	networkv3 "istio.io/api/networking/v1alpha3"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -98,7 +97,7 @@ func TestTLSSecretRefInvalidSecret(t *testing.T) {
 			},
 		},
 	}
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -147,7 +146,7 @@ func TestNoTLSOption(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -184,7 +183,7 @@ func TestCRDRemoved(t *testing.T) {
 	// A TestGatewayService resource with metadata and spec.
 	gatewayservice := &appv1alpha1.GatewayService{}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -239,7 +238,7 @@ func TestCertAndKey(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -299,7 +298,7 @@ func TestCertAndNoKey(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -359,7 +358,7 @@ func TestNoCertAndKey(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -417,7 +416,7 @@ func TestNoCertAndNoKey(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -481,22 +480,22 @@ func TestCertAndKeyWithSecretRef(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{
+	gateway := &v1alpha3.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-ingress-gateway", namespace),
 			Namespace: namespace,
 		},
-		Spec: networkv3.GatewaySpec{
-			Servers: []networkv3.Server{
+		Spec: networkv3.Gateway{
+			Servers: []*networkv3.Server{
 				{
-					Port: networkv3.Port{
+					Port: &networkv3.Port{
 						Name:     fmt.Sprintf("http-%s", name),
 						Number:   80,
 						Protocol: "HTTP",
 					},
 					Hosts: []string{"*"},
-					TLS: &networkv3.TLSOptions{
-						Mode:           networkv3.TLSModeSimple,
+					Tls: &networkv3.Server_TLSOptions{
+						Mode:           networkv3.Server_TLSOptions_SIMPLE,
 						CredentialName: fmt.Sprintf("%s-%s-secret", name, namespace),
 					},
 				},
@@ -568,7 +567,7 @@ func TestIncorrectCertAndKeyEncoding(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -629,22 +628,22 @@ func TestGatewayServiceControllerReconciler_Simple(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{
+	gateway := &v1alpha3.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-egress-gateway", namespace),
 			Namespace: namespace,
 		},
-		Spec: networkv3.GatewaySpec{
-			Servers: []networkv3.Server{
+		Spec: networkv3.Gateway{
+			Servers: []*networkv3.Server{
 				{
-					Port: networkv3.Port{
+					Port: &networkv3.Port{
 						Name:     fmt.Sprintf("http-%s", name),
 						Number:   80,
 						Protocol: "HTTP",
 					},
 					Hosts: []string{"*"},
-					TLS: &networkv3.TLSOptions{
-						Mode:           networkv3.TLSModeSimple,
+					Tls: &networkv3.Server_TLSOptions{
+						Mode:           networkv3.Server_TLSOptions_SIMPLE,
 						CredentialName: fmt.Sprintf("%s-%s-secret", name, namespace),
 					},
 				},
@@ -714,7 +713,7 @@ func TestGatewayServiceControllerReconciler_Passthrough(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
