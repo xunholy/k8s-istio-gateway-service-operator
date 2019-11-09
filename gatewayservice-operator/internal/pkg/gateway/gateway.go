@@ -20,79 +20,9 @@ type GatewayConfig struct {
 func Reconcile(g GatewayConfig) *v1alpha3.Gateway {
 	// Create empty server stanza array
 	servers := []*networkv3.Server{}
+
 	// Add all gatewayservice server entries into servers array
-
 	for _, gatewayservice := range g.GatewayService.Items {
-
-		// Secrets will be default to using Kubernetes secret objects leveraging SDS
-		secretRef := &networkv3.Server_TLSOptions{
-			// Optional: Indicates whether connections to this port should be
-			// secured using TLS. The value of this field determines how TLS is
-			// enforced.
-			Mode: TlsMode(gatewayservice.Spec.Mode),
-		}
-
-		if TlsMode(gatewayservice.Spec.Mode) == networkv3.Server_TLSOptions_SIMPLE {
-			if gatewayservice.Spec.TLSOptions != nil {
-				if gatewayservice.Spec.TLSOptions.TLSSecretPath != nil {
-					// TODO: This would require the Istio GW pod to be restarted to pickup secrets
-					// Restart pod using respective labels for ingres/egress and bounce pods based
-					// of a strategic percentage for optimization, perhaps include a grace period.
-					// https://github.com/xUnholy/k8s-istio-gateway-service-operator/issues/17
-					secretRef = &networkv3.Server_TLSOptions{
-						// REQUIRED if mode is "SIMPLE" or "MUTUAL". The path to the file
-						// holding the server-side TLS certificate to use.
-						ServerCertificate: gatewayservice.Spec.TLSOptions.TLSSecretPath.CertPath,
-
-						// REQUIRED if mode is "SIMPLE" or "MUTUAL". The path to the file
-						// holding the server's private key.
-						PrivateKey: gatewayservice.Spec.TLSOptions.TLSSecretPath.KeyPath,
-					}
-				}
-				if gatewayservice.Spec.TLSOptions.TLSSecretRef != nil {
-					// If the secret has already been applied to the K8s cluster and the operator does not need to
-					// create the secret then a tlsSecretRef can be used which references the secret. There is an
-					// assumption the Gateway has access to the secret references and that it exists prior to being
-					// referenced.
-					secretRef = &networkv3.Server_TLSOptions{
-						CredentialName: gatewayservice.Spec.TLSOptions.TLSSecretRef.SecretName,
-					}
-				}
-				if gatewayservice.Spec.TLSOptions.TLSSecret != nil {
-					secretRef = &networkv3.Server_TLSOptions{
-						// The credentialName stands for a unique identifier that can be used
-						// to identify the serverCertificate and the privateKey. The
-						// credentialName appended with suffix "-cacert" is used to identify
-						// the CaCertificates associated with this server. Gateway workloads
-						// capable of fetching credentials from a remote credential store such
-						// as Kubernetes secrets, will be configured to retrieve the
-						// serverCertificate and the privateKey using credentialName, instead
-						// of using the file system paths specified above. If using mutual TLS,
-						// gateway workload instances will retrieve the CaCertificates using
-						// credentialName-cacert. The semantics of the name are platform
-						// dependent.  In Kubernetes, the default Istio supplied credential
-						// server expects the credentialName to match the name of the
-						// Kubernetes secret that holds the server certificate, the private
-						// key, and the CA certificate (if using mutual TLS). Set the
-						// `ISTIO_META_USER_SDS` metadata variable in the gateway's proxy to
-						// enable the dynamic credential fetching feature.
-						CredentialName: fmt.Sprintf("%s-%s-secret", gatewayservice.ObjectMeta.Name, gatewayservice.ObjectMeta.Namespace),
-					}
-				}
-			}
-		}
-		// If PASSTHROUGH mode is being used, TLSSecretPath and TLSSecretRef are currently not supported.
-		if TlsMode(gatewayservice.Spec.Mode) == networkv3.Server_TLSOptions_PASSTHROUGH {
-			if gatewayservice.Spec.TLSOptions != nil {
-				if gatewayservice.Spec.TLSOptions.TLSSecret != nil {
-					secretRef = &networkv3.Server_TLSOptions{
-						CredentialName: fmt.Sprintf("%s-%s-secret", gatewayservice.ObjectMeta.Name, gatewayservice.ObjectMeta.Namespace),
-					}
-
-				}
-			}
-		}
-
 		servers = append(servers, &networkv3.Server{
 			// REQUIRED: The Port on which the proxy should listen for incoming
 			// connections
@@ -111,7 +41,7 @@ func Reconcile(g GatewayConfig) *v1alpha3.Gateway {
 			// Set of TLS related options that govern the server's behavior. Use
 			// these options to control if all http requests should be redirected to
 			// https, and the TLS modes to use.
-			Tls: secretRef,
+			Tls: ServerTlsConfig(gatewayservice),
 
 			// A list of hosts exposed by this gateway. While
 			// typically applicable to HTTP services, it can also be used for TCP

@@ -7,18 +7,37 @@ import (
 // GatewayServiceSpec defines the desired state of GatewayService
 // +k8s:openapi-gen=true
 type GatewayServiceSpec struct {
+
+	// REQUIRED if mode is `MUTUAL`.
+	// +optional
+	CaCertificates *string `json:"caCertificates,omitempty"`
+
 	// List of Servers > map of list of hosts and port
 	// +kubebuilder:validation:UniqueItems=false
 	// +kubebuilder:validation:MinItems=1
 	Hosts []string `json:"hosts"`
 
-	// +kubebuilder:validation:Minimum=1
-	// +kubebuilder:validation:Maximum=65535
-	Port uint32 `json:"port"`
+	// Will redirect traffic from HTTP to HTTPS.
+	// +optional
+	HttpsRedirect bool `json:"httpsRedirect,omitempty"`
+
+	// Optional: Minimum TLS protocol version.
+	// +kubebuilder:validation:Enum=TLS_AUTO,TLSV1_0,TLSV1_1,TLSV1_2,TLSV1_3
+	// +optional
+	MinProtocolVersion *string `json:"minProtocolVersion,omitempty"`
+
+	// Optional: Maximum TLS protocol version.
+	// +kubebuilder:validation:Enum=TLS_AUTO,TLSV1_0,TLSV1_1,TLSV1_2,TLSV1_3
+	// +optional
+	MaxProtocolVersion *string `json:"maxProtocolVersion,omitempty"`
 
 	// Options: SIMPLE|PASSTHROUGH|MUTUAL|ISTIO_MUTUAL|AUTO_PASSTHROUGH
 	// +kubebuilder:validation:Enum=SIMPLE,PASSTHROUGH,MUTUAL,ISTIO_MUTUAL,AUTO_PASSTHROUGH
 	Mode string `json:"mode"`
+
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=65535
+	Port uint32 `json:"port"`
 
 	// Options: HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP|TLS
 	// +kubebuilder:validation:Enum=HTTP,HTTPS,GRPC,HTTP2,MONGO,TCP,TLS

@@ -278,7 +278,7 @@ func (r *ReconcileGatewayService) validation(request reconcile.Request, gateways
 // However, when the CRD is removed due to ownership both secrets will be cleaned up appropriately.
 // https://github.com/xUnholy/k8s-istio-gateway-service-operator/issues/16
 func secretNamespace(gs *appv1alpha1.GatewayService) string {
-	if gateway.TlsMode(gs.Spec.Mode) == networkv3.Server_TLSOptions_AUTO_PASSTHROUGH {
+	if gateway.TlsMode(gs.Spec.Mode) == networkv3.Server_TLSOptions_PASSTHROUGH {
 		return gs.Namespace
 	}
 	// Both SIMPLE and MUTUAL result in the secrets being created and/or referenced in the namespace istio is running

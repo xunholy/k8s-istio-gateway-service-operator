@@ -140,6 +140,7 @@ func TestGatewayReconcile_TLSSecret_SIMPLE(t *testing.T) {
 					Hosts: []string{"*"},
 					Tls: &networkv3.Server_TLSOptions{
 						CredentialName: "example-app-application-secret",
+						Mode:           1,
 					},
 				},
 			},
@@ -195,6 +196,7 @@ func TestGatewayReconcile_TLSSecretPath(t *testing.T) {
 					Tls: &networkv3.Server_TLSOptions{
 						ServerCertificate: "/example/path/to/file",
 						PrivateKey:        "/example/path/to/file",
+						Mode:              1,
 					},
 				},
 			},
@@ -248,6 +250,7 @@ func TestGatewayReconcile_TLSSecretRef(t *testing.T) {
 					Hosts: []string{"*"},
 					Tls: &networkv3.Server_TLSOptions{
 						CredentialName: "example-secret",
+						Mode:           1,
 					},
 				},
 			},
