@@ -14,8 +14,6 @@ require (
 	sigs.k8s.io/controller-tools v0.1.10
 )
 
-// replace istio.io/api => github.com/xunholy/api v0.0.0-20191029012234-9fe6a7da3673
-
 // Pinned to kubernetes-1.13.4
 replace (
 	k8s.io/api => k8s.io/api v0.0.0-20190222213804-5cb15d344471
