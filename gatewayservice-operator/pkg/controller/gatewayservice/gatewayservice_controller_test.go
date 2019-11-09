@@ -52,7 +52,7 @@ func TestGatewayServiceController(t *testing.T) {
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
 
-	// List ANZCertificate objects filtering by labels
+	// List GatewayService objects filtering by labels
 	gatewayservicesList := &appv1alpha1.GatewayServiceList{}
 
 	// Register operator types with the runtime scheme.
@@ -72,7 +72,7 @@ func TestGatewayServiceController(t *testing.T) {
 	for _, i := range tests {
 		err := cl.List(context.TODO(), client.MatchingField(i.key, i.value), gatewayservicesList)
 		if err != nil {
-			t.Fatalf("list certificates: (%v)", err)
+			t.Fatalf("list gatewayservices: (%v)", err)
 		}
 	}
 }
@@ -269,7 +269,7 @@ func TestCertAndKey(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
@@ -329,7 +329,7 @@ func TestCertAndNoKey(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
@@ -389,7 +389,7 @@ func TestNoCertAndKey(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
@@ -447,7 +447,7 @@ func TestNoCertAndNoKey(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
@@ -506,12 +506,12 @@ func TestCertAndKeyWithSecretRef(t *testing.T) {
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice, gateway}
 
-	// List ANZCertificate objects filtering by labels
-	certificatesList := &appv1alpha1.GatewayServiceList{}
+	// List GatewayService objects filtering by labels
+	gatewayservicesList := &appv1alpha1.GatewayServiceList{}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice, certificatesList)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice, gatewayservicesList)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -535,7 +535,7 @@ func TestCertAndKeyWithSecretRef(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
@@ -598,7 +598,7 @@ func TestIncorrectCertAndKeyEncoding(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
@@ -654,12 +654,12 @@ func TestGatewayServiceControllerReconciler_Simple(t *testing.T) {
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice, gateway}
 
-	// List ANZCertificate objects filtering by labels
-	certificatesList := &appv1alpha1.GatewayServiceList{}
+	// List GatewayService objects filtering by labels
+	gatewayservicesList := &appv1alpha1.GatewayServiceList{}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice, certificatesList)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice, gatewayservicesList)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -683,7 +683,7 @@ func TestGatewayServiceControllerReconciler_Simple(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
@@ -744,7 +744,7 @@ func TestGatewayServiceControllerReconciler_Passthrough(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
