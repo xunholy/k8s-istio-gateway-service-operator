@@ -15,7 +15,6 @@ spec:
       serviceAccountName: gatewayservice-operator
       containers:
         - name: gatewayservice-operator
-          # Replace this with the built image name
           image: xunholy/k8s-operator:latest
           command:
             - gatewayservice-operator
@@ -23,16 +22,26 @@ spec:
           env:
             - name: WATCH_NAMESPACE
               valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
+                configMapKeyRef:
+                  name: gatewayservice-watch-namespace-config
+                  key: NAMESPACE
             - name: POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: 'gatewayservice-operator'
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels.name
             - name: DOMAIN
               valueFrom:
                 configMapKeyRef:
-                  name: gatewayservice-config
+                  name: gatewayservice-domain-config
                   key: DOMAIN
+          resources:
+            requests:
+              memory: '512Mi'
+              cpu: '250m'
+            limits:
+              memory: '2Gi'
+              cpu: '1'

@@ -15,6 +15,7 @@ type GatewayServiceSpec struct {
 	// List of Servers > map of list of hosts and port
 	// +kubebuilder:validation:UniqueItems=false
 	// +kubebuilder:validation:MinItems=1
+	// +listType=set
 	Hosts []string `json:"hosts"`
 
 	// Will redirect traffic from HTTP to HTTPS.

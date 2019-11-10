@@ -1,8 +1,18 @@
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: gatewayservice-config
+  name: gatewayservice-domain-config
   labels:
     app: gatewayservice
 data:
   DOMAIN: example.com
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatewayservice-watch-namespace-config
+  labels:
+    app: gatewayservice
+data:
+  NAMESPACE: ''

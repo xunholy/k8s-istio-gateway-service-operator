@@ -31,6 +31,8 @@ spec:
   tlsOptions: {}
 ```
 
+More examples can be viewed [HERE](docs/example/crd.md).
+
 ### Hosts
 
 A list of hosts exposed by this gateway service. Standard DNS wildcard prefix syntax is permitted, however, wildcard prefix should be used with caution with a multi-tenancy cluster.
@@ -137,8 +139,6 @@ Deploy CRDs to a Kubernetes cluster to extend the API server and create the requ
 kubectl apply -f deploy/ -R -n istio-system
 ```
 
-Note: This will also deploy the three TLSOptions examples into the Kubernetes cluster. View the file [HERE](gatewayservice-operator/deploy/crds/app_v1alpha1_gatewayservice_cr.yaml)
-
 Verify the gatewayservice operator is running
 
 ```bash
@@ -147,6 +147,11 @@ kubectl get pod -l name=gatewayservice-operator
 
 **Congratulations**! You will now have the gatewayservice operator up and running locally.
 
+### Override ENV Values
+
+The operator has some environment variables that are configured, such as `DOMAIN` and `WATCH_NAMESPACE`. By default the domain is set to `example.com` however, this should be updated to reflect the domain you have available. The `WATCH_NAMESPACE` variable is set to an empty string, this is intended because you want the operator to collect events from all namespace, however, if you wish to make it only listen to events in a particular namespace please update the config map to reflect your desired configuration.
+
+These Kubernetes config maps can be updated [HERE](gatewayservice-operator/deploy/configmap.yaml)
 ## Generating Project
 
 Generate default operator project.
