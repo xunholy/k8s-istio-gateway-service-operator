@@ -31,21 +31,47 @@ spec:
           type: object
         spec:
           properties:
+            caCertificates:
+              description: REQUIRED if mode is `MUTUAL`.
+              type: string
             hosts:
               description: List of Servers > map of list of hosts and port
               items:
                 type: string
               minItems: 1
               type: array
+            httpsRedirect:
+              description: Will redirect traffic from HTTP to HTTPS.
+              type: boolean
+            maxProtocolVersion:
+              description: 'Optional: Maximum TLS protocol version.'
+              enum:
+              - TLS_AUTO
+              - TLSV1_0
+              - TLSV1_1
+              - TLSV1_2
+              - TLSV1_3
+              type: string
+            minProtocolVersion:
+              description: 'Optional: Minimum TLS protocol version.'
+              enum:
+              - TLS_AUTO
+              - TLSV1_0
+              - TLSV1_1
+              - TLSV1_2
+              - TLSV1_3
+              type: string
             mode:
-              description: 'Options: SIMPLE|PASSTHROUGH|MUTUAL'
+              description: 'Options: SIMPLE|PASSTHROUGH|MUTUAL|ISTIO_MUTUAL|AUTO_PASSTHROUGH'
               enum:
               - SIMPLE
               - PASSTHROUGH
               - MUTUAL
+              - ISTIO_MUTUAL
+              - AUTO_PASSTHROUGH
               type: string
             port:
-              format: int64
+              format: int32
               maximum: 65535
               minimum: 1
               type: integer
@@ -66,11 +92,7 @@ spec:
                 referencing the mount path in the pod.'
               properties:
                 tlsSecret:
-                  description: 'TODO: Validation must be added to ensure multiple
-                    of these values are not set - TLSSecret|TLSSecretRef|TLSSecretPath
-                    otherwise there should be some form of hierarchy precedence for
-                    which overrides other set values. Specifies TLS Cert/Key to be
-                    created'
+                  description: Specifies TLS Cert/Key to be created
                   properties:
                     cert:
                       description: Secret map with each key which is base64 encoded
@@ -105,8 +127,8 @@ spec:
               type: string
           required:
           - hosts
-          - port
           - mode
+          - port
           - protocol
           - trafficType
           type: object

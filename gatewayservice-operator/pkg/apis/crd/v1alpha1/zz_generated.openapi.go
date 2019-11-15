@@ -66,6 +66,13 @@ func schema_pkg_apis_crd_v1alpha1_GatewayServiceSpec(ref common.ReferenceCallbac
 			SchemaProps: spec.SchemaProps{
 				Description: "GatewayServiceSpec defines the desired state of GatewayService",
 				Properties: map[string]spec.Schema{
+					"caCertificates": {
+						SchemaProps: spec.SchemaProps{
+							Description: "REQUIRED if mode is `MUTUAL`.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
 					"hosts": {
 						SchemaProps: spec.SchemaProps{
 							Description: "List of Servers > map of list of hosts and port",
@@ -80,17 +87,38 @@ func schema_pkg_apis_crd_v1alpha1_GatewayServiceSpec(ref common.ReferenceCallbac
 							},
 						},
 					},
-					"port": {
+					"httpsRedirect": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"integer"},
-							Format: "int32",
+							Description: "Will redirect traffic from HTTP to HTTPS.",
+							Type:        []string{"boolean"},
+							Format:      "",
+						},
+					},
+					"minProtocolVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Optional: Minimum TLS protocol version.",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"maxProtocolVersion": {
+						SchemaProps: spec.SchemaProps{
+							Description: "Optional: Maximum TLS protocol version.",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 					"mode": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Options: SIMPLE|PASSTHROUGH|MUTUAL",
+							Description: "Options: SIMPLE|PASSTHROUGH|MUTUAL|ISTIO_MUTUAL|AUTO_PASSTHROUGH",
 							Type:        []string{"string"},
 							Format:      "",
+						},
+					},
+					"port": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
 						},
 					},
 					"protocol": {
@@ -114,7 +142,7 @@ func schema_pkg_apis_crd_v1alpha1_GatewayServiceSpec(ref common.ReferenceCallbac
 						},
 					},
 				},
-				Required: []string{"hosts", "port", "mode", "protocol", "trafficType"},
+				Required: []string{"hosts", "mode", "port", "protocol", "trafficType"},
 			},
 		},
 		Dependencies: []string{

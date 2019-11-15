@@ -9,9 +9,8 @@ import (
 	appv1alpha1 "github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 	"k8s.io/client-go/kubernetes/scheme"
 
-	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
-	// networkv3 "istio.io/api/networking/v1alpha3"
-	networkv3 "knative.dev/pkg/apis/istio/v1alpha3"
+	networkv3 "istio.io/api/networking/v1alpha3"
+	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -53,7 +52,7 @@ func TestGatewayServiceController(t *testing.T) {
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
 
-	// List ANZCertificate objects filtering by labels
+	// List GatewayService objects filtering by labels
 	gatewayservicesList := &appv1alpha1.GatewayServiceList{}
 
 	// Register operator types with the runtime scheme.
@@ -73,7 +72,7 @@ func TestGatewayServiceController(t *testing.T) {
 	for _, i := range tests {
 		err := cl.List(context.TODO(), client.MatchingField(i.key, i.value), gatewayservicesList)
 		if err != nil {
-			t.Fatalf("list certificates: (%v)", err)
+			t.Fatalf("list gatewayservices: (%v)", err)
 		}
 	}
 }
@@ -98,7 +97,7 @@ func TestTLSSecretRefInvalidSecret(t *testing.T) {
 			},
 		},
 	}
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -147,7 +146,7 @@ func TestNoTLSOption(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -184,7 +183,7 @@ func TestCRDRemoved(t *testing.T) {
 	// A TestGatewayService resource with metadata and spec.
 	gatewayservice := &appv1alpha1.GatewayService{}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -239,7 +238,7 @@ func TestCertAndKey(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -270,7 +269,7 @@ func TestCertAndKey(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
@@ -299,7 +298,7 @@ func TestCertAndNoKey(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -330,7 +329,7 @@ func TestCertAndNoKey(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
@@ -359,7 +358,7 @@ func TestNoCertAndKey(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -390,7 +389,7 @@ func TestNoCertAndKey(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
@@ -417,7 +416,7 @@ func TestNoCertAndNoKey(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -448,7 +447,7 @@ func TestNoCertAndNoKey(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
@@ -481,22 +480,22 @@ func TestCertAndKeyWithSecretRef(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{
+	gateway := &v1alpha3.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-ingress-gateway", namespace),
 			Namespace: namespace,
 		},
-		Spec: networkv3.GatewaySpec{
-			Servers: []networkv3.Server{
+		Spec: networkv3.Gateway{
+			Servers: []*networkv3.Server{
 				{
-					Port: networkv3.Port{
+					Port: &networkv3.Port{
 						Name:     fmt.Sprintf("http-%s", name),
 						Number:   80,
 						Protocol: "HTTP",
 					},
 					Hosts: []string{"*"},
-					TLS: &networkv3.TLSOptions{
-						Mode:           networkv3.TLSModeSimple,
+					Tls: &networkv3.Server_TLSOptions{
+						Mode:           networkv3.Server_TLSOptions_SIMPLE,
 						CredentialName: fmt.Sprintf("%s-%s-secret", name, namespace),
 					},
 				},
@@ -507,12 +506,12 @@ func TestCertAndKeyWithSecretRef(t *testing.T) {
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice, gateway}
 
-	// List ANZCertificate objects filtering by labels
-	certificatesList := &appv1alpha1.GatewayServiceList{}
+	// List GatewayService objects filtering by labels
+	gatewayservicesList := &appv1alpha1.GatewayServiceList{}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice, certificatesList)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice, gatewayservicesList)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -536,7 +535,7 @@ func TestCertAndKeyWithSecretRef(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
@@ -568,7 +567,7 @@ func TestIncorrectCertAndKeyEncoding(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -599,7 +598,7 @@ func TestIncorrectCertAndKeyEncoding(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
@@ -629,22 +628,22 @@ func TestGatewayServiceControllerReconciler_Simple(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{
+	gateway := &v1alpha3.Gateway{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      fmt.Sprintf("%s-egress-gateway", namespace),
 			Namespace: namespace,
 		},
-		Spec: networkv3.GatewaySpec{
-			Servers: []networkv3.Server{
+		Spec: networkv3.Gateway{
+			Servers: []*networkv3.Server{
 				{
-					Port: networkv3.Port{
+					Port: &networkv3.Port{
 						Name:     fmt.Sprintf("http-%s", name),
 						Number:   80,
 						Protocol: "HTTP",
 					},
 					Hosts: []string{"*"},
-					TLS: &networkv3.TLSOptions{
-						Mode:           networkv3.TLSModeSimple,
+					Tls: &networkv3.Server_TLSOptions{
+						Mode:           networkv3.Server_TLSOptions_SIMPLE,
 						CredentialName: fmt.Sprintf("%s-%s-secret", name, namespace),
 					},
 				},
@@ -655,12 +654,12 @@ func TestGatewayServiceControllerReconciler_Simple(t *testing.T) {
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice, gateway}
 
-	// List ANZCertificate objects filtering by labels
-	certificatesList := &appv1alpha1.GatewayServiceList{}
+	// List GatewayService objects filtering by labels
+	gatewayservicesList := &appv1alpha1.GatewayServiceList{}
 
 	// Register operator types with the runtime scheme.
 	s := scheme.Scheme
-	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice, certificatesList)
+	s.AddKnownTypes(appv1alpha1.SchemeGroupVersion, gateway, gatewayservice, gatewayservicesList)
 
 	// Create a fake client to mock API calls.
 	cl := fake.NewFakeClient(objs...)
@@ -684,7 +683,7 @@ func TestGatewayServiceControllerReconciler_Simple(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {
@@ -714,7 +713,7 @@ func TestGatewayServiceControllerReconciler_Passthrough(t *testing.T) {
 		},
 	}
 
-	gateway := &networkv3.Gateway{}
+	gateway := &v1alpha3.Gateway{}
 
 	// Objects to track in the fake client.
 	objs := []runtime.Object{gatewayservice}
@@ -745,7 +744,7 @@ func TestGatewayServiceControllerReconciler_Passthrough(t *testing.T) {
 	if !res.Requeue {
 		t.Error("reconcile did not requeue request as expected")
 	}
-	// Check if certificates has been created.
+	// Check if gatewayservice has been created.
 	gatewayservice = &appv1alpha1.GatewayService{}
 	err = r.client.Get(context.TODO(), req.NamespacedName, gatewayservice)
 	if err != nil {

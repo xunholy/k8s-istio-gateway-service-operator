@@ -2,32 +2,46 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	// istio.io/api/networking/v1alpha3 is not currently used as it's missing the method DeepCopyObject
-	// networkv3 "istio.io/api/networking/v1alpha3"
-
-	networkv3 "knative.dev/pkg/apis/istio/v1alpha3"
 )
 
 // GatewayServiceSpec defines the desired state of GatewayService
 // +k8s:openapi-gen=true
 type GatewayServiceSpec struct {
+
+	// REQUIRED if mode is `MUTUAL`.
+	// +optional
+	CaCertificates *string `json:"caCertificates,omitempty"`
+
 	// List of Servers > map of list of hosts and port
 	// +kubebuilder:validation:UniqueItems=false
 	// +kubebuilder:validation:MinItems=1
 	Hosts []string `json:"hosts"`
 
+	// Will redirect traffic from HTTP to HTTPS.
+	// +optional
+	HttpsRedirect bool `json:"httpsRedirect,omitempty"`
+
+	// Optional: Minimum TLS protocol version.
+	// +kubebuilder:validation:Enum=TLS_AUTO,TLSV1_0,TLSV1_1,TLSV1_2,TLSV1_3
+	// +optional
+	MinProtocolVersion *string `json:"minProtocolVersion,omitempty"`
+
+	// Optional: Maximum TLS protocol version.
+	// +kubebuilder:validation:Enum=TLS_AUTO,TLSV1_0,TLSV1_1,TLSV1_2,TLSV1_3
+	// +optional
+	MaxProtocolVersion *string `json:"maxProtocolVersion,omitempty"`
+
+	// Options: SIMPLE|PASSTHROUGH|MUTUAL|ISTIO_MUTUAL|AUTO_PASSTHROUGH
+	// +kubebuilder:validation:Enum=SIMPLE,PASSTHROUGH,MUTUAL,ISTIO_MUTUAL,AUTO_PASSTHROUGH
+	Mode string `json:"mode"`
+
 	// +kubebuilder:validation:Minimum=1
 	// +kubebuilder:validation:Maximum=65535
-	Port int `json:"port"`
-
-	// Options: SIMPLE|PASSTHROUGH|MUTUAL
-	// +kubebuilder:validation:Enum=SIMPLE,PASSTHROUGH,MUTUAL
-	Mode networkv3.TLSMode `json:"mode"`
+	Port uint32 `json:"port"`
 
 	// Options: HTTP|HTTPS|GRPC|HTTP2|MONGO|TCP|TLS
 	// +kubebuilder:validation:Enum=HTTP,HTTPS,GRPC,HTTP2,MONGO,TCP,TLS
-	Protocol networkv3.PortProtocol `json:"protocol"`
+	Protocol string `json:"protocol"`
 
 	// Options: "ingress" or "egress"
 	// +kubebuilder:validation:Enum=ingress,egress
@@ -40,8 +54,6 @@ type GatewayServiceSpec struct {
 }
 
 type TLSOptions struct {
-	// TODO: Validation must be added to ensure multiple of these values are not set - TLSSecret|TLSSecretRef|TLSSecretPath
-	// otherwise there should be some form of hierarchy precedence for which overrides other set values.
 	// Specifies TLS Cert/Key to be created
 	// +optional
 	TLSSecret *TLSSecret `json:"tlsSecret,omitempty"`
