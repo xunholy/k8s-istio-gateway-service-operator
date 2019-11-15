@@ -6,24 +6,24 @@ require (
 	github.com/spf13/pflag v1.0.3
 	istio.io/api v0.0.0-20191029012234-9fe6a7da3673
 	istio.io/client-go v0.0.0-20191024204624-13a7366c1cab
-	k8s.io/api v0.0.0-20190918155943-95b840bb6a1f
+	k8s.io/api v0.0.0-20190918195907-bd6ac527cfd2
 	k8s.io/apimachinery v0.0.0-20191004115801-a2eda9f80ab8
 	k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible
 	k8s.io/kube-openapi v0.0.0-20190603182131-db7b694dc208
-	sigs.k8s.io/controller-runtime v0.2.0
-	sigs.k8s.io/controller-tools v0.2.0
+	sigs.k8s.io/controller-runtime v0.3.0
+	sigs.k8s.io/controller-tools v0.2.2
 	sigs.k8s.io/testing_frameworks v0.1.2 // indirect
 )
 
 replace (
 	k8s.io/kube-state-metrics => k8s.io/kube-state-metrics v1.6.0
-	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.1.12
+	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.3.0
 	sigs.k8s.io/controller-tools => sigs.k8s.io/controller-tools v0.1.11-0.20190411181648-9d55346c2bde
 )
 
 // Pinned to kubernetes-1.14.1
 replace (
-	k8s.io/api => k8s.io/api v0.0.0-20190409021203-6e4e0e4f393b
+	k8s.io/api => k8s.io/api v0.0.0-20190918195907-bd6ac527cfd2
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20190409022649-727a075fdec8
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20190404173353-6a84e37a896d
 	k8s.io/client-go => k8s.io/client-go v11.0.1-0.20190409021438-1a26190bd76a+incompatible

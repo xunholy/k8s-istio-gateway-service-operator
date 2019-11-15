@@ -125,6 +125,7 @@ type CreatedSecretDetails struct {
 
 // GatewayService is the Schema for the gatewayservice API
 // +k8s:openapi-gen=true
+// +kubebuilder:resource:path=gatewayservices,scope=Cluster
 // +kubebuilder:resource:shortName=gs
 // +kubebuilder:subresource:status
 type GatewayService struct {
