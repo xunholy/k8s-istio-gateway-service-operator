@@ -16,7 +16,6 @@ import (
 	appv1alpha1 "github.com/xunholy/k8s-istio-gateway-service-operator/pkg/apis/crd/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -191,12 +190,12 @@ func (r *ReconcileGatewayService) ReconcileGateway(request reconcile.Request, ga
 
 	// List all GatewayService CRDs
 	gatewayservices := &appv1alpha1.GatewayServiceList{}
-	listOpts := &client.ListOptions{
-		Namespace:     request.Namespace,
-		FieldSelector: fields.OneTermEqualSelector("spec.trafficType", trafficType),
+	listOpts := []client.ListOption{
+		client.InNamespace(request.Namespace),
+		client.MatchingField("spec.trafficType", trafficType),
 	}
 
-	err = r.client.List(context.TODO(), listOpts, gatewayservices)
+	err = r.client.List(context.TODO(), gatewayservices, listOpts)
 	if err != nil {
 		return err
 	}

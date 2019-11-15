@@ -22,6 +22,7 @@ func schema_pkg_apis_crd_v1alpha1_GatewayService(ref common.ReferenceCallback) c
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "GatewayService is the Schema for the gatewayservice API",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
@@ -65,6 +66,7 @@ func schema_pkg_apis_crd_v1alpha1_GatewayServiceSpec(ref common.ReferenceCallbac
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "GatewayServiceSpec defines the desired state of GatewayService",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"caCertificates": {
 						SchemaProps: spec.SchemaProps{
@@ -74,6 +76,11 @@ func schema_pkg_apis_crd_v1alpha1_GatewayServiceSpec(ref common.ReferenceCallbac
 						},
 					},
 					"hosts": {
+						VendorExtensible: spec.VendorExtensible{
+							Extensions: spec.Extensions{
+								"x-kubernetes-list-type": "set",
+							},
+						},
 						SchemaProps: spec.SchemaProps{
 							Description: "List of Servers > map of list of hosts and port",
 							Type:        []string{"array"},
@@ -155,6 +162,7 @@ func schema_pkg_apis_crd_v1alpha1_GatewayServiceStatus(ref common.ReferenceCallb
 		Schema: spec.Schema{
 			SchemaProps: spec.SchemaProps{
 				Description: "GatewayServiceStatus defines the observed state of GatewayService",
+				Type:        []string{"object"},
 				Properties: map[string]spec.Schema{
 					"condition": {
 						SchemaProps: spec.SchemaProps{
